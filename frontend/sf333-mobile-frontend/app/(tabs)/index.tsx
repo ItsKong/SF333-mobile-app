@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet} from "react-native";
+import { Text, View, StyleSheet } from "react-native";
 
 export default function Index() {
   return (
@@ -10,8 +10,8 @@ export default function Index() {
 
 const style = StyleSheet.create({
   view: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 })
