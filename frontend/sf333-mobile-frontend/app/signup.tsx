@@ -40,10 +40,18 @@ export default function AuthScreen() {
           mode="outlined"
         />
 
-        <Button mode="contained">Sign Up</Button> 
+        <Checkbox
+          status={isSelected ? "checked" : "unchecked"}
+          onPress={() => {
+            setSelection(!isSelected);
+          }}
+        />
+
+        <Text>agree to Term of services</Text>
+
+        <Button mode="contained">Sign Up</Button>
 
         <Button mode="text">Already have an Account</Button>
-        
       </View>
     </KeyboardAvoidingView>
   );
