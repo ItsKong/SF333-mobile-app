@@ -6,9 +6,9 @@ import {
   StyleSheet,
   Animated,
   TextInput,
+  InteractionManager,
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { Colors } from "react-native/Libraries/NewAppScreen";
 
 export default function LoginScreen() {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
@@ -21,8 +21,8 @@ export default function LoginScreen() {
   const fadeButtonText = useRef(new Animated.Value(1)).current;
 
   const handleSelected = (role: string) => {
-    setSelectedRole(role);
     // setHasSelected(true);
+    setSelectedRole(role);
     Animated.parallel([
       Animated.timing(fadeButton, {
         toValue: 0,
@@ -35,25 +35,26 @@ export default function LoginScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      setHasSelected(true);
-
-      Animated.parallel([
-        Animated.timing(fadeTextArea, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeBackButton, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeText, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      InteractionManager.runAfterInteractions(() => {
+        setHasSelected(true);
+        Animated.parallel([
+          Animated.timing(fadeTextArea, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeBackButton, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeText, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      });
     });
   };
 
@@ -75,21 +76,23 @@ export default function LoginScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      setHasSelected(false);
-      setSelectedRole(null);
+      InteractionManager.runAfterInteractions(() => {
+        setHasSelected(false);
+        setSelectedRole(null);
 
-      Animated.parallel([
-        Animated.timing(fadeButton, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeButtonText, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        })
-      ]).start();
+        Animated.parallel([
+          Animated.timing(fadeButton, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeButtonText, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      });
     });
   };
   return (
@@ -106,7 +109,7 @@ export default function LoginScreen() {
               console.log("back"), handleBackPress();
             }}
           >
-            <AntDesign name="leftcircle" size={37} color="black" />
+            <AntDesign name="leftcircle" size={37} color="#5E6CA8" />
           </Pressable>
         ) : null}
       </Animated.View>
@@ -120,7 +123,7 @@ export default function LoginScreen() {
         {hasSelected ? (
           // 1st() show role & name input
           <>
-            <View style={[styles.button, { backgroundColor: "#F9EECF" }]}>
+            <View style={[styles.button, { backgroundColor: "#A7C7E7" }]}>
               <Animated.View style={{ opacity: fadeText }}>
                 <Text style={styles.text}>
                   {selectedRole === "caretaker" ? "Care taker" : "Care giver"}
@@ -143,7 +146,7 @@ export default function LoginScreen() {
               style={({ pressed }) => [
                 styles.button,
                 {
-                  backgroundColor: pressed ? "#fbe29dff" : "#F9EECF",
+                  backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
                 },
               ]}
               onPress={() => {
@@ -162,7 +165,7 @@ export default function LoginScreen() {
                 style={({ pressed }) => [
                   styles.button,
                   {
-                    backgroundColor: pressed ? "#fbe29dff" : "#F9EECF",
+                    backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
                   },
                 ]}
                 onPress={() => {
@@ -205,6 +208,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 46,
+    fontFamily: "Inconsolata_Light",
     color: "black",
     marginTop: 150,
     marginBottom: 150,
@@ -222,7 +226,6 @@ const styles = StyleSheet.create({
   },
   line: {
     height: 1,
-    // position: 'absolute',
     width: "60%",
     alignSelf: "center",
     backgroundColor: "grey",
@@ -235,7 +238,7 @@ const styles = StyleSheet.create({
     top: "5%",
   },
   nameInput: {
-    backgroundColor: "#F9EECF",
+    backgroundColor: "#DBE8F5",
     borderRadius: 8,
     width: "100%",
     marginTop: 20,
