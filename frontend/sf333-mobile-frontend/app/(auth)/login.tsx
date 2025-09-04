@@ -9,10 +9,13 @@ import {
   InteractionManager,
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { replace } from "expo-router/build/global-state/routing";
+import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [hasSelected, setHasSelected] = useState(false);
+  const router = useRouter()
 
   const fadeBackButton = useRef(new Animated.Value(-100)).current;
   const fadeButton = useRef(new Animated.Value(1)).current;
@@ -104,6 +107,7 @@ export default function LoginScreen() {
         ]}
       >
         {hasSelected ? (
+          //show back button
           <Pressable
             onPress={() => {
               console.log("back"), handleBackPress();
@@ -132,10 +136,23 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.line} />
+
             <Animated.View style={{ opacity: fadeTextArea }}>
-              <View style={styles.button}>
+              <View style={[styles.button, { marginTop: 10 }]}>
                 <Text>Your name:</Text>
                 <TextInput style={styles.nameInput} placeholder="name" />
+                <Pressable
+                style={({ pressed }) => [
+                  styles.confirmbutt,
+                  {
+                    backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
+                  }
+                ]}
+                onPress={() => {
+                  console.log("confirm"), router.replace('../(app)')}}
+                >
+                  <Text>confirm</Text>
+                </Pressable>
               </View>
             </Animated.View>
           </>
@@ -172,7 +189,7 @@ export default function LoginScreen() {
                   console.log("Care giver"), handleSelected("caregiver");
                 }}
               >
-                <Text style={styles.text}>Care taker</Text>
+                <Text style={styles.text}>Care giver</Text>
               </Pressable>
             </Animated.View>
           </>
@@ -243,4 +260,12 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 20,
   },
+  confirmbutt: {
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+    width: 210,
+    height: 30,
+    marginTop: 30,
+  }
 });
