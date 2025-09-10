@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 
-export default function GiverLayout() {
-  // stack of giver page group
+export default function TakerLayout() {
+  // stack of taker page group
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />

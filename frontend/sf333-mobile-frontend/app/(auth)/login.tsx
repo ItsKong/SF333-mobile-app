@@ -9,14 +9,16 @@ import {
   InteractionManager,
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { replace } from "expo-router/build/global-state/routing";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthProvider";
 
 export default function LoginScreen() {
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("none");
+  const { setUserRole } = useAuth();
   const [hasSelected, setHasSelected] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
+  //anime stuff
   const fadeBackButton = useRef(new Animated.Value(-100)).current;
   const fadeButton = useRef(new Animated.Value(1)).current;
   const fadeTextArea = useRef(new Animated.Value(0)).current;
@@ -81,7 +83,7 @@ export default function LoginScreen() {
     ]).start(() => {
       InteractionManager.runAfterInteractions(() => {
         setHasSelected(false);
-        setSelectedRole(null);
+        setSelectedRole("none");
 
         Animated.parallel([
           Animated.timing(fadeButton, {
@@ -97,6 +99,11 @@ export default function LoginScreen() {
         ]).start();
       });
     });
+  };
+
+  const handleConfirm = () => {
+    setUserRole(selectedRole);
+    router.replace("/(app)");
   };
   return (
     <View style={styles.container}>
@@ -142,14 +149,15 @@ export default function LoginScreen() {
                 <Text>Your name:</Text>
                 <TextInput style={styles.nameInput} placeholder="name" />
                 <Pressable
-                style={({ pressed }) => [
-                  styles.confirmbutt,
-                  {
-                    backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
-                  }
-                ]}
-                onPress={() => {
-                  console.log("confirm"), router.replace('../(app)')}}
+                  style={({ pressed }) => [
+                    styles.confirmbutt,
+                    {
+                      backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
+                    },
+                  ]}
+                  onPress={() => {
+                    console.log("confirm"), handleConfirm();
+                  }}
                 >
                   <Text>confirm</Text>
                 </Pressable>
@@ -267,5 +275,5 @@ const styles = StyleSheet.create({
     width: 210,
     height: 30,
     marginTop: 30,
-  }
+  },
 });
