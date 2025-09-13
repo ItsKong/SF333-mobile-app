@@ -9,14 +9,72 @@ import {
   Pressable,
   Text,
   TextInput,
-  View
+  View,
+  Platform,
+  Alert,
 } from "react-native";
 
 export default function LoginScreen() {
   const [selectedRole, setSelectedRole] = useState<string>("none");
   const { setUserRole } = useAuth();
   const [hasSelected, setHasSelected] = useState(false);
+  const [hasConfirm, setHasComfirm] = useState(false);
   const router = useRouter();
+  
+  //dropdown stuff
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState([
+    { label: "Male", value: "Male" },
+    { label: "Female", value: "Female" },
+  ]);
+
+  //date picker stuff
+  const [date, setDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState(null);
+
+  const toggleDatepicker = () => {
+    setShowPicker(!showPicker);
+  };
+
+  const onChange = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || date;
+
+    // On Android, the picker automatically closes after selection
+    // On iOS, we need to handle it differently
+    if (Platform.OS === "android") {
+      setShowPicker(false);
+    }
+
+    if (event.type === "set") {
+      setDate(currentDate);
+      // Format the date for display
+      const formattedDate = currentDate.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      setDateOfBirth(formattedDate as any);
+
+      // Close picker on iOS after selection
+      if (Platform.OS === "ios") {
+        setShowPicker(false);
+      }
+    } else if (event.type === "dismissed") {
+      setShowPicker(false);
+    }
+  };
+
+  const confirmIOSDate = () => {
+    const formattedDate = date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    setDateOfBirth(formattedDate as any);
+    setShowPicker(false);
+  };
 
   //anime stuff
   const {
@@ -41,18 +99,44 @@ export default function LoginScreen() {
   };
 
   const handleBackPress = () => {
+    setOpen(false);
     animateBack(
       () => null,
       () => {
         setHasSelected(false);
         setSelectedRole("none");
+        setValue(null);
+        setDateOfBirth(null);
+        setHasComfirm(false);
       }
     );
   };
 
   const handleConfirm = () => {
-    setUserRole(selectedRole);
-    router.replace("/(app)");
+    Alert.alert(
+      "Confirm Action",
+      "Please confirm your infomation.",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("cancle Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Ok",
+          onPress: () => {
+            console.log("Ok pressed");
+            setUserRole(selectedRole);
+            setHasComfirm(true);
+          },
+        },
+      ],
+      { cancelable: false } // This makes the alert non-cancelable by tapping outside
+    );
+
+    // setUserRole(selectedRole);
+    // setHasComfirm(true);
+    // router.replace("/index");
   };
   return (
     <View style={loginStyles.container}>
@@ -149,4 +233,3 @@ export default function LoginScreen() {
     </View>
   ) 
 }
-

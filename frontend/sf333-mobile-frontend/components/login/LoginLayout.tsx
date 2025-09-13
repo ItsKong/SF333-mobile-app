@@ -1,6 +1,14 @@
 // components/login/LoginLayout.tsx
-import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Animated,
+  Image,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface LoginLayoutProps {
   children: React.ReactNode;
@@ -8,12 +16,12 @@ interface LoginLayoutProps {
   onBackPress?: () => void;
   fadeBackButton?: Animated.Value;
 }
-
-export function LoginLayout({ 
-  children, 
-  showBackButton, 
-  onBackPress, 
-  fadeBackButton 
+// await AntDesign.loadFont();
+export function LoginLayout({
+  children,
+  showBackButton,
+  onBackPress,
+  fadeBackButton,
 }: LoginLayoutProps) {
   return (
     <View style={styles.container}>
@@ -27,33 +35,37 @@ export function LoginLayout({
         >
           {showBackButton && (
             <Pressable onPress={onBackPress}>
-              <AntDesign name="leftcircle" size={37} color="#5E6CA8" />
+              <MaterialCommunityIcons
+                name="arrow-left-circle"
+                size={43}
+                color="#5E6CA8"
+              />
             </Pressable>
           )}
         </Animated.View>
       ) : (
-        <View style={styles.backButton}>
-          {showBackButton && (
-            <Pressable onPress={onBackPress}>
-              <AntDesign name="leftcircle" size={37} color="#5E6CA8" />
-            </Pressable>
-          )}
-        </View>
+       null
       )}
 
       {/* Header */}
-      <View>
-        <Text style={styles.header}>Fantastic</Text>
+      <View style={styles.header}>
+        <Image
+          source={require("@/assets/images/fantistic-high-resolution-logo-transparent.png")} // ใส่ path ของรูปโลโก้คุณ
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Main Content */}
-      <View style={styles.content}>
-        {children}
-      </View>
+      <View style={styles.content}>{children}</View>
 
       {/* Bottom */}
       <View style={styles.bottom}>
-        <Text style={styles.termsText}>Term of service</Text>
+        {!showBackButton ? (
+          <Text style={styles.termsText}>Term of service</Text>
+        ):(
+          null
+        )}
       </View>
     </View>
   );
@@ -72,8 +84,8 @@ const styles = StyleSheet.create({
     fontSize: 46,
     fontFamily: "Inconsolata_Light",
     color: "black",
-    marginTop: 150,
-    marginBottom: 150,
+    marginTop: 50,
+    marginBottom: 50,
   },
   bottom: {
     position: "absolute",
@@ -86,5 +98,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: "7%",
     top: "5%",
+  },
+  logo: {
+    width: 200,
+    height: 200,
   },
 });
