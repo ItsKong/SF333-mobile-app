@@ -8,6 +8,10 @@ export function useLoginAnimations() {
   const fadeTextArea = useRef(new Animated.Value(0)).current;
   const fadeText = useRef(new Animated.Value(0)).current;
   const fadeButtonText = useRef(new Animated.Value(1)).current;
+  
+  // New animated values for content sections
+  const fadeInputContent = useRef(new Animated.Value(0)).current;
+  const fadeConnectContent = useRef(new Animated.Value(0)).current;
 
   const animateToSelection = (
     beforeAnimation: () => void, // Your setSelectedRole goes here
@@ -30,7 +34,7 @@ export function useLoginAnimations() {
       InteractionManager.runAfterInteractions(() => {
         afterAnimation(); // Execute your logic AFTER
 
-        // Continue with more animations...
+        // Continue with more animations and show input content
         Animated.parallel([
           Animated.timing(fadeTextArea, {
             toValue: 1,
@@ -47,7 +51,37 @@ export function useLoginAnimations() {
             duration: 500,
             useNativeDriver: true,
           }),
+          Animated.timing(fadeInputContent, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
         ]).start();
+      });
+    });
+  };
+
+  const animateToConnect = (
+    beforeAnimation: () => void,
+    afterAnimation: () => void
+  ) => {
+    beforeAnimation(); // Execute your logic BEFORE
+
+    // Fade out input content
+    Animated.timing(fadeInputContent, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      InteractionManager.runAfterInteractions(() => {
+        afterAnimation(); // Execute your logic AFTER (setHasConfirm)
+
+        // Fade in connect content
+        Animated.timing(fadeConnectContent, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
       });
     });
   };
@@ -74,6 +108,16 @@ export function useLoginAnimations() {
         duration: 500,
         useNativeDriver: true,
       }),
+      Animated.timing(fadeInputContent, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeConnectContent, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
     ]).start(() => {
       InteractionManager.runAfterInteractions(() => {
         afterAnimation(); // Your reset logic here
@@ -94,14 +138,42 @@ export function useLoginAnimations() {
     });
   };
 
+  const animateBackToInput = (
+    beforeAnimation: () => void,
+    afterAnimation: () => void
+  ) => {
+    beforeAnimation(); // Any logic before animation
+
+    // Fade out connect content
+    Animated.timing(fadeConnectContent, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      InteractionManager.runAfterInteractions(() => {
+        afterAnimation(); // Your reset logic here (setHasConfirm to false)
+
+        // Fade in input content
+        Animated.timing(fadeInputContent, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      });
+    });
+  };
+
   return {
     animateToSelection,
+    animateToConnect,
     animateBack,
+    animateBackToInput,
     fadeBackButton,
     fadeTextArea,
     fadeText,
     fadeButtonText,
     fadeButton,
-    // ... other animated values
+    fadeInputContent,
+    fadeConnectContent,
   };
 }

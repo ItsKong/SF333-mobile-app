@@ -22,12 +22,46 @@ export default function LoginScreen() {
   const [selectedRole, setSelectedRole] = useState<string>("none");
   const { setUserRole } = useAuth();
   const [hasSelected, setHasSelected] = useState(false);
-  const [hasConfirm, setHasComfirm] = useState(false);
+  const [hasConfirm, setHasConfirm] = useState(false);
   const router = useRouter();
-  
+
+  //form stuff
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState(null);
+  const [dateOfBirth, setDateOfBirth] = useState(null);
+  const [phone, setPhone] = useState("");
+  const [emergency, setEmergency] = useState("");
+  const [diagnosis, setDiagnosis] = useState("");
+  const [sendform, setSendform] = useState({});
+  let formData = {};
+
+  const handleFormSubmit = () => {
+    // async function
+    // create and send form api
+    if (selectedRole === "caregiver") {
+      formData = {
+        name: name,
+        gender: gender,
+        dateOfBirth: dateOfBirth,
+        phone: phone,
+        emergency: emergency,
+        diagnosis: diagnosis,
+      };
+    } else {
+      formData = {
+        name: name,
+        gender: gender,
+        dateOfBirth: dateOfBirth,
+        phone: phone,
+      };
+    }
+    setSendform(formData)
+    console.log("Form data: ", sendform);
+    formData = {}
+  };
+
   //dropdown stuff
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(null);
   const [items, setItems] = useState([
     { label: "Male", value: "Male" },
     { label: "Female", value: "Female" },
@@ -36,7 +70,6 @@ export default function LoginScreen() {
   //date picker stuff
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-  const [dateOfBirth, setDateOfBirth] = useState(null);
 
   const toggleDatepicker = () => {
     setShowPicker(!showPicker);
@@ -83,12 +116,12 @@ export default function LoginScreen() {
   //anime stuff
   const {
     animateToSelection,
+    animateToConnect,
     animateBack,
     fadeBackButton,
-    fadeTextArea,
-    fadeText,
     fadeButton,
-    fadeButtonText,
+    fadeInputContent,
+    fadeConnectContent,
   } = useLoginAnimations();
 
   const handleSelected = (role: string) => {
@@ -109,38 +142,45 @@ export default function LoginScreen() {
       () => {
         setHasSelected(false);
         setSelectedRole("none");
-        setValue(null);
+        setGender(null);
         setDateOfBirth(null);
-        setHasComfirm(false);
+        setHasConfirm(false);
       }
     );
   };
 
-  const handleConfirm = () => {
+  const handleFormConfirm = () => {
     Alert.alert(
-      "Confirm Action",
-      "Please confirm your infomation.",
+      "Confirm Infomation",
+      "Please confirm your information.",
       [
         {
           text: "Cancel",
-          onPress: () => console.log("cancle Pressed"),
+          onPress: () => console.log("cancel Pressed"),
           style: "cancel",
         },
         {
           text: "Ok",
           onPress: () => {
             console.log("Ok pressed");
-            setUserRole(selectedRole);
-            setHasComfirm(true);
+            handleFormSubmit();
+            animateToConnect(
+              () => {
+                setUserRole(selectedRole);
+              },
+              () => {
+                setHasConfirm(true);
+              }
+            );
           },
         },
       ],
-      { cancelable: false } // This makes the alert non-cancelable by tapping outside
+      { cancelable: false }
     );
+  };
 
-    // setUserRole(selectedRole);
-    // setHasComfirm(true);
-    // router.replace("/index");
+  const handleConnect = () => {
+    //do connect stuff
   };
 
   const renderRoleSelection = () => (
@@ -226,18 +266,23 @@ export default function LoginScreen() {
   };
 
   const renderSupervisorInput = () => (
-    <View style={loginStyles.content}>
+    <Animated.View style={[loginStyles.content, { opacity: fadeInputContent }]}>
       <Text>
         You are: <Text style={{ fontWeight: "bold" }}>Supervisor</Text>
       </Text>
-      <TextInput style={loginStyles.formInput} placeholder="Name" />
+      <TextInput
+        style={loginStyles.formInput}
+        placeholder="Name"
+        value={name}
+        onChangeText={setName}
+      />
       <View style={loginStyles.dropdownContainer}>
         <DropDownPicker
           open={open}
-          value={value}
+          value={gender}
           items={items}
           setOpen={setOpen}
-          setValue={setValue}
+          setValue={setGender}
           setItems={setItems}
           placeholder="Gender"
           listMode="SCROLLVIEW"
@@ -259,13 +304,25 @@ export default function LoginScreen() {
         </Pressable>
       </View>
 
-      <TextInput style={loginStyles.formInput} placeholder="Phone number" />
+      <TextInput
+        style={loginStyles.formInput}
+        placeholder="Phone number"
+        value={phone}
+        onChangeText={setPhone}
+      />
       <TextInput
         style={loginStyles.formInput}
         placeholder="Emergency contact/number"
+        value={emergency}
+        onChangeText={setEmergency}
       />
       <Text>Main diagnosis for your Supervisee:</Text>
-      <TextInput style={loginStyles.formInput} placeholder="(ADHD, Autism)" />
+      <TextInput
+        style={loginStyles.formInput}
+        placeholder="(ADHD, Autism)"
+        value={diagnosis}
+        onChangeText={setDiagnosis}
+      />
       <View>
         <Pressable
           style={({ pressed }) => [
@@ -274,27 +331,27 @@ export default function LoginScreen() {
               backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
             },
           ]}
-          onPress={handleConfirm}
+          onPress={handleFormConfirm}
         >
           <Text>confirm</Text>
         </Pressable>
       </View>
       {renderDatePicker()}
-    </View>
+    </Animated.View>
   );
 
   const renderSuperviseeInput = () => (
-    <View style={loginStyles.content}>
+    <Animated.View style={[loginStyles.content, { opacity: fadeInputContent }]}>
       <Text>You are:</Text>
       <Text style={{ fontWeight: "bold" }}>Individual with a disability</Text>
       <TextInput style={loginStyles.formInput} placeholder="Name" />
       <View style={loginStyles.dropdownContainer}>
         <DropDownPicker
           open={open}
-          value={value}
+          value={gender}
           items={items}
           setOpen={setOpen}
-          setValue={setValue}
+          setValue={setGender}
           setItems={setItems}
           placeholder="Gender"
           listMode="SCROLLVIEW"
@@ -328,17 +385,19 @@ export default function LoginScreen() {
               backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
             },
           ]}
-          onPress={handleConfirm}
+          onPress={handleFormConfirm}
         >
           <Text>confirm</Text>
         </Pressable>
       </View>
       {renderDatePicker()}
-    </View>
+    </Animated.View>
   );
 
   const renderSupervisorConnect = () => (
-    <View style={loginStyles.content}>
+    <Animated.View
+      style={[loginStyles.content, { opacity: fadeConnectContent }]}
+    >
       <Text>
         Please connect your{" "}
         <Text style={{ fontWeight: "bold" }}>Supervisee</Text>
@@ -352,16 +411,18 @@ export default function LoginScreen() {
               backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
             },
           ]}
-          onPress={handleConfirm}
+          onPress={handleConnect}
         >
           <Text>connect</Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 
   const renderSuperviseeConnect = () => (
-    <View style={loginStyles.content}>
+    <Animated.View
+      style={[loginStyles.content, { opacity: fadeConnectContent }]}
+    >
       <Text>
         Please give your connect code to your{" "}
         <Text style={{ fontWeight: "bold" }}>Supervisor</Text>
@@ -369,7 +430,7 @@ export default function LoginScreen() {
       <View style={loginStyles.formInput}>
         <Text>{"connect code here!"}</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 
   const renderContent = () => {
@@ -401,6 +462,7 @@ export default function LoginScreen() {
       showBackButton={hasSelected}
       onBackPress={handleBackPress}
       fadeBackButton={fadeBackButton}
+      fadeButton={fadeButton}
     >
       {renderContent()}
     </LoginLayout>
