@@ -9,13 +9,19 @@ export const loginStyles = StyleSheet.create({
   button: {
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 8,
-    width: 210,
-    height: 90,
+    borderRadius: 20,
+    width: 233,
+    height: 112,
   },
   content: {
     width: "100%",
     alignItems: "center",
+    margin:0,
+  },
+  selectRoleContent: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 50,
   },
   text: {
     color: "black",
@@ -61,9 +67,29 @@ export const loginStyles = StyleSheet.create({
   confirmbutt: {
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 8,
+    borderRadius: 20,
     width: 210,
     height: 30,
     marginTop: 30,
   },
+  dropdownContainer: {
+    marginTop: 8,
+    marginBottom:8,
+    paddingHorizontal: 60,
+    zIndex: 1000,
+  },
+  genderDropdown: {
+    borderColor: '#DBE8F5',
+    backgroundColor: '#DBE8F5',
+    borderRadius: 20,
+  },
+  formInput: {
+    backgroundColor: '#DBE8F5',
+    width: '70%',
+    height: 50,
+    borderRadius: 20,
+    marginTop:8,
+    padding: 14,
+    marginBottom:8,
+  }
 });
