@@ -8,7 +8,7 @@ export default function AppIndex() {
   useEffect(() => {
     
     const timer = setTimeout(() => {
-      router.push('/login');
+      router.replace('/(auth)/login');
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -17,7 +17,7 @@ export default function AppIndex() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../assets/images/fantistic-high-resolution-logo-transparent copy.png')} // ใส่ path ของรูปโลโก้คุณ
+        source={require('../assets/images/fantistic-high-resolution-logo-transparent.png')} // ใส่ path ของรูปโลโก้คุณ
         style={styles.logo}
         resizeMode="contain"
       />
