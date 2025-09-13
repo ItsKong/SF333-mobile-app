@@ -17,7 +17,7 @@ export default function AppIndex() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../assets/images/fantistic-high-resolution-logo-transparent.png')} // ใส่ path ของรูปโลโก้คุณ
+        source={require('@/assets/images/fantistic-high-resolution-logo-transparent.png')} // ใส่ path ของรูปโลโก้คุณ
         style={styles.logo}
         resizeMode="contain"
       />

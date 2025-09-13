@@ -15,6 +15,7 @@ interface LoginLayoutProps {
   showBackButton?: boolean;
   onBackPress?: () => void;
   fadeBackButton?: Animated.Value;
+  fadeButton?: Animated.Value;
 }
 // await AntDesign.loadFont();
 export function LoginLayout({
@@ -22,6 +23,7 @@ export function LoginLayout({
   showBackButton,
   onBackPress,
   fadeBackButton,
+  fadeButton,
 }: LoginLayoutProps) {
   return (
     <View style={styles.container}>
@@ -60,13 +62,14 @@ export function LoginLayout({
       <View style={styles.content}>{children}</View>
 
       {/* Bottom */}
-      <View style={styles.bottom}>
+
+      <Animated.View style={[styles.bottom, {opacity:fadeButton}]}>
         {!showBackButton ? (
           <Text style={styles.termsText}>Term of service</Text>
         ):(
           null
         )}
-      </View>
+      </Animated.View>
     </View>
   );
 }
