@@ -120,7 +120,7 @@ export default function LoginScreen() {
               console.log("back"), handleBackPress();
             }}
           >
-            <AntDesign name="leftcircle" size={37} color="#5E6CA8" />
+            <AntDesign name="left-circle" size={37} color="#5E6CA8" />
           </Pressable>
         ) : null}
       </Animated.View>
