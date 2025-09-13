@@ -1,9 +1,11 @@
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function HomePage() {
-  const [screen, setScreen] = useState<"home" | "mood">("home"); // state คุมหน้า
+  const router = useRouter();
+  const [screen, setScreen] = useState<"home" | "mood">("home"); 
   const [rating, setRating] = useState(0);
   const [showerTaken, setShowerTaken] = useState<boolean | null>(null);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
@@ -19,7 +21,12 @@ export default function HomePage() {
     return (
       <View style={{ flex: 1, position: "relative" }}>
         <ScrollView contentContainerStyle={styles.container}>
-          
+        {/* Back Button for Home Screen */}
+        <View style={styles.backButton}>
+          <Pressable onPress={() => router.replace("/(auth)/login")}> 
+            <AntDesign name="left-circle" size={37} color="#5E6CA8" />
+          </Pressable>
+        </View>
           {/* Header */}
           <Text style={styles.header}>How are you feeling today?</Text>
 
@@ -108,7 +115,7 @@ export default function HomePage() {
         {/* Back Button */}
         <View style={styles.backButton}>
           <Pressable onPress={() => setScreen("home")}> 
-            <AntDesign name="leftcircle" size={37} color="#5E6CA8" />
+            <AntDesign name="left-circle" size={37} color="#5E6CA8" />
           </Pressable>
         </View>
         <Text style={styles.headerBox}>Mood tracking</Text>
@@ -162,7 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     color: "#000",
-    marginTop: 50,
+    marginTop: 100,
     marginBottom: 10,
   },
   moodBox: {
@@ -254,7 +261,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: "100%",
     height: 100,
-    backgroundColor: "#000",
+    backgroundColor: "#5A5A5A",
     alignItems: "center",
     justifyContent: "center",
   },
