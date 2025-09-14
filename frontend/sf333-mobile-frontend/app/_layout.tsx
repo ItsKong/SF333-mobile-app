@@ -6,8 +6,8 @@ import { AuthProvider } from "@/contexts/AuthProvider";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    Inconsolata_Light: require('../assets/fonts/Inconsolata_Expanded-Light.ttf')
+    SpaceMono: require('@/assets/fonts/SpaceMono-Regular.ttf'),
+    Inconsolata_Light: require('@/assets/fonts/Inconsolata_Expanded-Light.ttf')
   });
 
   useEffect(() => {

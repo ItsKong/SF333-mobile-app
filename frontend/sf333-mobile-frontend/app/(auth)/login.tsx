@@ -180,7 +180,8 @@ export default function LoginScreen() {
   };
 
   const handleConnect = () => {
-    //do connect stuff
+    //do connect stuff then -> (app)
+    router.navigate('/(app)')
   };
 
   const renderRoleSelection = () => (
@@ -429,6 +430,19 @@ export default function LoginScreen() {
       </Text>
       <View style={loginStyles.formInput}>
         <Text>{"connect code here!"}</Text>
+      </View>
+      <View>
+        <Pressable
+          style={({ pressed }) => [
+            loginStyles.confirmbutt,
+            {
+              backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
+            },
+          ]}
+          onPress={handleConnect}
+        >
+          <Text>connect</Text>
+        </Pressable>
       </View>
     </Animated.View>
   );
