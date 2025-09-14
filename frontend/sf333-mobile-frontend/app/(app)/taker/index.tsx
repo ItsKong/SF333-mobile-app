@@ -27,11 +27,11 @@ export default function HomePage() {
             <AntDesign name="left-circle" size={37} color="#5E6CA8" />
           </Pressable>
         </View>
-          {/* Header */}
-          <Text style={styles.header}>How are you feeling today?</Text>
-
+          {/* Mood Tracking Header */}
+          <Text style={styles.header}>Mood tracking</Text>
           {/* Mood Box → Mood Tracking */}
-          <Pressable style={styles.moodBox} onPress={() => setScreen("mood")}>
+          <Pressable style={styles.moodBox} onPress={() => setScreen
+            ("mood")}>
             <View style={styles.moodRow}>
               {["#BCE69B", "#EE9A9A", "#BCE69B", "#FFF176"].map((color, index) => (
                 <View key={index} style={[styles.moodCircle, { backgroundColor: color }]} />
@@ -165,12 +165,21 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     gap: 15,
   },
-  header: {
+  header: {  
+    marginTop: 80,
     fontSize: 20,
-    fontWeight: "600",
-    color: "#000",
-    marginTop: 100,
-    marginBottom: 10,
+    fontWeight: "500",
+    color: "#333",
+    backgroundColor: "#e3f2fd",
+    width: "40%",
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
   moodBox: {
     backgroundColor: "#F4EEE0",
@@ -280,44 +289,57 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // Mood screen
-  moodContainer: {
-    flex: 1,
-    padding: 30,
-    backgroundColor: "#fff",
-    alignItems: "center",
-  },
-  backButton: {
-    position: "absolute",
-    left: "7%",
-    top: "5%",
-  },
-  headerBox: {
-    marginTop: 100,
-    fontSize: 20,
-    fontWeight: "400",
-    backgroundColor: "#e3f2fd",
-    paddingHorizontal: 25,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-  },
-  question: {
-    marginTop: 30,
-    marginBottom: 40,
-    fontSize: 25,
-    fontWeight: "400",
-    alignSelf: "flex-start",
-  },
-  moodButton: {
-    width: "90%",
-    paddingVertical: 25,
-    borderRadius: 10,
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  moodText: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
+// Mood screen
+moodContainer: {
+  flex: 1,
+  padding: 30,
+  backgroundColor: "#fff",
+  alignItems: "center",
+},
+headerBox: {
+  marginTop: 70,
+  fontSize: 26,
+  fontWeight: "700",
+  color: "#333",
+  backgroundColor: "#e3f2fd",
+  paddingHorizontal: 30,
+  paddingVertical: 15,
+  borderRadius: 10,
+  alignSelf: "center",
+  textAlign: "center",
+  shadowColor: "#000",
+  shadowOpacity: 0.08,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  elevation: 3,
+},
+question: {
+  marginTop: 25,
+  marginBottom: 35,
+  fontSize: 29,
+  fontWeight: "500",
+  color: "#444",
+},
+moodButton: {
+  width: "90%",
+  paddingVertical: 22,
+  borderRadius: 12,
+  alignItems: "center",
+  marginVertical: 12,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 3 },
+  shadowRadius: 5,
+  elevation: 3,
+},
+moodText: {
+  fontSize: 20,
+  fontWeight: "600",
+  color: "#333",
+},
+backButton: {
+  position: "absolute",
+  left: "7%",
+  top: "5%",
+},
 });

@@ -9,14 +9,16 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.sf333mobilefrontend"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fantistic-high-resolution-logo-transparent.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.sf333mobilefrontend"
     },
     "web": {
       "bundler": "metro",
