@@ -4,7 +4,7 @@
     "slug": "sf333-mobile-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/fantistic-high-resolution-logo-transparent.png",
+    "icon": "./assets/images/fantistic-high-resolution-logo.png",
     "scheme": "sf333mobilefrontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

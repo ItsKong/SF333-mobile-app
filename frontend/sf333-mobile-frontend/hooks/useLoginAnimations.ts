@@ -4,14 +4,44 @@ import { Animated, InteractionManager } from "react-native";
 // hooks/useLoginAnimations.ts
 export function useLoginAnimations() {
   const fadeBackButton = useRef(new Animated.Value(-100)).current;
-  const fadeButton = useRef(new Animated.Value(1)).current;
+  const fadeButton = useRef(new Animated.Value(0)).current;
   const fadeTextArea = useRef(new Animated.Value(0)).current;
   const fadeText = useRef(new Animated.Value(0)).current;
-  const fadeButtonText = useRef(new Animated.Value(1)).current;
-  
+  const fadeButtonText = useRef(new Animated.Value(0)).current;
+
   // New animated values for content sections
   const fadeInputContent = useRef(new Animated.Value(0)).current;
   const fadeConnectContent = useRef(new Animated.Value(0)).current;
+  const fadeLoginContent = useRef(new Animated.Value(1)).current;
+
+  const animateToLogin = (
+    beforeAnimation: () => void, // Your setSelectedRole goes here
+    afterAnimation: () => void
+  ) => {
+    Animated.timing(fadeLoginContent, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.parallel([
+        Animated.timing(fadeBackButton, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeButton, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeButtonText, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+  };
 
   const animateToSelection = (
     beforeAnimation: () => void, // Your setSelectedRole goes here
@@ -41,11 +71,11 @@ export function useLoginAnimations() {
             duration: 500,
             useNativeDriver: true,
           }),
-          Animated.timing(fadeBackButton, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }),
+          // Animated.timing(fadeBackButton, {
+          //   toValue: 0,
+          //   duration: 500,
+          //   useNativeDriver: true,
+          // }),
           Animated.timing(fadeText, {
             toValue: 1,
             duration: 500,
@@ -123,16 +153,16 @@ export function useLoginAnimations() {
         afterAnimation(); // Your reset logic here
 
         Animated.parallel([
-          Animated.timing(fadeButton, {
+          Animated.timing(fadeLoginContent, {
             toValue: 1,
             duration: 500,
             useNativeDriver: true,
           }),
-          Animated.timing(fadeButtonText, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
+          // Animated.timing(fadeButtonText, {
+          //   toValue: 1,
+          //   duration: 500,
+          //   useNativeDriver: true,
+          // }),
         ]).start();
       });
     });
@@ -168,6 +198,7 @@ export function useLoginAnimations() {
     animateToConnect,
     animateBack,
     animateBackToInput,
+    animateToLogin,
     fadeBackButton,
     fadeTextArea,
     fadeText,
@@ -175,5 +206,6 @@ export function useLoginAnimations() {
     fadeButton,
     fadeInputContent,
     fadeConnectContent,
+    fadeLoginContent,
   };
 }
