@@ -1,6 +1,13 @@
 // components/login/SignupForm.tsx
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, Animated, Platform } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Animated,
+  Platform,
+} from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { loginStyles } from "@/styles/login.style";
@@ -12,10 +19,6 @@ interface SignupFormProps {
   // Form data
   name: string;
   setName: (value: string) => void;
-  gender: string | null;
-  setGender: (value: string | null) => void;
-  dateOfBirth: string | null;
-  setDateOfBirth: (value: string | null) => void;
   phone: string;
   setPhone: (value: string) => void;
   emergency?: string;
@@ -30,10 +33,6 @@ export const SignupForm = ({
   fadeInputContent,
   name,
   setName,
-  gender,
-  setGender,
-  dateOfBirth,
-  setDateOfBirth,
   phone,
   setPhone,
   emergency,
@@ -45,6 +44,7 @@ export const SignupForm = ({
   const isSupervisor = role === "caregiver";
 
   // Gender dropdown state (internal to component)
+  const [gender, setGender] = useState(null);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([
     { label: "Male", value: "Male" },
@@ -54,6 +54,7 @@ export const SignupForm = ({
   // Date picker state (internal to component)
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState(null);
 
   const toggleDatepicker = () => {
     setShowPicker(!showPicker);
@@ -61,20 +62,22 @@ export const SignupForm = ({
 
   const onChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || date;
-
+    // On Android, the picker automatically closes after selection
+    // On iOS, we need to handle it differently
     if (Platform.OS === "android") {
       setShowPicker(false);
     }
 
     if (event.type === "set") {
       setDate(currentDate);
+      // Format the date for display
       const formattedDate = currentDate.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       });
-      setDateOfBirth(formattedDate);
-
+      setDateOfBirth(formattedDate as any);
+      // Close picker on iOS after selection
       if (Platform.OS === "ios") {
         setShowPicker(false);
       }
@@ -89,7 +92,7 @@ export const SignupForm = ({
       month: "short",
       year: "numeric",
     });
-    setDateOfBirth(formattedDate);
+    setDateOfBirth(formattedDate as any);
     setShowPicker(false);
   };
 
