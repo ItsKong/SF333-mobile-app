@@ -18,10 +18,14 @@ import { iosDatePicker } from "@/styles/iosDatePicker";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
+import { LoginForm } from "@/components/login/LoginForm";
+import { RoleSelection } from "@/components/login/RoleSelection";
+import { SignupForm } from "@/components/login/SignupForm";
 export default function LoginScreen() {
   const [selectedRole, setSelectedRole] = useState<string>("none");
   const { setUserRole } = useAuth();
   const [hasSelected, setHasSelected] = useState(false);
+  const [hasLogin, setHasLogin] = useState(false);
   const [hasConfirm, setHasConfirm] = useState(false);
   const router = useRouter();
 
@@ -33,6 +37,7 @@ export default function LoginScreen() {
   const [emergency, setEmergency] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [sendform, setSendform] = useState({});
+  const [password, setPassword] = useState("");
   let formData = {};
 
   const handleFormSubmit = () => {
@@ -41,6 +46,7 @@ export default function LoginScreen() {
     if (selectedRole === "caregiver") {
       formData = {
         name: name,
+        password: password,
         gender: gender,
         dateOfBirth: dateOfBirth,
         phone: phone,
@@ -50,14 +56,15 @@ export default function LoginScreen() {
     } else {
       formData = {
         name: name,
+        password: password,
         gender: gender,
         dateOfBirth: dateOfBirth,
         phone: phone,
       };
     }
-    setSendform(formData)
+    setSendform(formData);
     console.log("Form data: ", sendform);
-    formData = {}
+    formData = {};
   };
 
   //dropdown stuff
@@ -118,11 +125,36 @@ export default function LoginScreen() {
     animateToSelection,
     animateToConnect,
     animateBack,
+    animateToLogin,
     fadeBackButton,
     fadeButton,
     fadeInputContent,
     fadeConnectContent,
+    fadeLoginContent,
   } = useLoginAnimations();
+
+  const handleLogin = (state: string) => {
+    if (state === "confirm") {
+      null;
+    }
+
+    if (state === "create") {
+      console.log("create");
+      setHasLogin(true);
+      animateToLogin(
+        () => {
+          setHasSelected(false);
+        },
+        () => {
+          null;
+        }
+      );
+    }
+
+    if (state === "forgot") {
+      null;
+    }
+  };
 
   const handleSelected = (role: string) => {
     animateToSelection(
@@ -137,6 +169,7 @@ export default function LoginScreen() {
 
   const handleBackPress = () => {
     setOpen(false);
+    setHasLogin(false);
     animateBack(
       () => null,
       () => {
@@ -181,43 +214,8 @@ export default function LoginScreen() {
 
   const handleConnect = () => {
     //do connect stuff then -> (app)
-    router.navigate('/(app)')
+    router.navigate("/(app)");
   };
-
-  const renderRoleSelection = () => (
-    // Initial state: show role selection buttons
-    <View style={loginStyles.selectRoleContent}>
-      <Animated.View style={[loginStyles.button, { opacity: fadeButton }]}>
-        <Pressable
-          style={({ pressed }) => [
-            loginStyles.button,
-            {
-              backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
-            },
-          ]}
-          onPress={() => handleSelected("caretaker")}
-        >
-          <Text style={loginStyles.text}>Individual with a disability</Text>
-        </Pressable>
-      </Animated.View>
-
-      <Animated.View style={[loginStyles.line, { opacity: fadeButton }]} />
-
-      <Animated.View style={[loginStyles.button, { opacity: fadeButton }]}>
-        <Pressable
-          style={({ pressed }) => [
-            loginStyles.button,
-            {
-              backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7",
-            },
-          ]}
-          onPress={() => handleSelected("caregiver")}
-        >
-          <Text style={loginStyles.text}>Supervisor</Text>
-        </Pressable>
-      </Animated.View>
-    </View>
-  );
 
   const renderDatePicker = () => {
     if (!showPicker) return null;
@@ -448,16 +446,50 @@ export default function LoginScreen() {
   );
 
   const renderContent = () => {
+    if (!hasLogin) {
+      return (
+        <LoginForm
+          fadeLoginContent={fadeLoginContent}
+          name={name}
+          setName={setName}
+          password={password}
+          setPassword={setPassword}
+          onLogin={handleLogin}
+        />
+      );
+    }
+
     if (!hasSelected) {
-      return renderRoleSelection();
+      return (
+        <RoleSelection fadeButton={fadeButton} onSelectRole={handleSelected} />
+      );
     }
 
     if (hasSelected && !hasConfirm) {
-      if (selectedRole === "caretaker") {
-        return renderSuperviseeInput();
-      } else {
-        return renderSupervisorInput();
-      }
+      return (
+        <SignupForm
+          role={selectedRole}
+          fadeInputContent={fadeInputContent}
+          name={name}
+          setName={setName}
+          gender={gender}
+          setGender={setGender}
+          dateOfBirth={dateOfBirth}
+          phone={phone}
+          setPhone={setPhone}
+          emergency={emergency}
+          setEmergency={setEmergency}
+          diagnosis={diagnosis}
+          setDiagnosis={setDiagnosis}
+          onConfirm={handleFormConfirm}
+          toggleDatepicker={toggleDatepicker}
+          renderDatePicker={renderDatePicker}
+          open={open}
+          setOpen={setOpen}
+          items={items}
+          setItems={setItems}
+        />
+      );
     }
 
     if (hasSelected && hasConfirm) {
@@ -473,7 +505,7 @@ export default function LoginScreen() {
   };
   return (
     <LoginLayout
-      showBackButton={hasSelected}
+      showBackButton={hasLogin}
       onBackPress={handleBackPress}
       fadeBackButton={fadeBackButton}
       fadeButton={fadeButton}

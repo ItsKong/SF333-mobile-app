@@ -91,5 +91,40 @@ export const loginStyles = StyleSheet.create({
     marginTop:8,
     padding: 14,
     marginBottom:8,
+  },
+  loginContent: {
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+    width: 233,
+    height: 112,
+  },
+  loginForm: {
+    backgroundColor: '#DBE8F5',
+    width: '150%',
+    height: '50%',
+    borderRadius: 20,
+    padding: 20,
+    marginTop: 15,
+  },
+  loginButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 60,
+    width: '150%',
+    height: '50%',
+    borderRadius: 20,
+  },
+  loginSideButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 60,
+    width: '150%',
+    height: '50%',
+    borderRadius: 20,
+  },
+  loginSideButtonText: {
+     color: "black",
+    fontSize: 14,
   }
 });
