@@ -27,33 +27,16 @@ export default function LoginScreen() {
   const [diagnosis, setDiagnosis] = useState("");
   const [sendform, setSendform] = useState({});
   const [password, setPassword] = useState("");
-  let formData = {};
 
   const handleFormSubmit = () => {
     // async function
-    // create and send form api
-    if (selectedRole === "caregiver") {
-      formData = {
-        name: name,
-        password: password,
-        gender: gender,
-        dateOfBirth: dateOfBirth,
-        phone: phone,
-        emergency: emergency,
-        diagnosis: diagnosis,
-      };
-    } else {
-      formData = {
-        name: name,
-        password: password,
-        gender: gender,
-        dateOfBirth: dateOfBirth,
-        phone: phone,
-      };
-    }
+    // create and send to form api
+    const formData =
+      selectedRole === "caregiver"
+        ? { name, password, gender, dateOfBirth, phone, emergency, diagnosis }
+        : { name, password, gender, dateOfBirth, phone };
     setSendform(formData);
     console.log("Form data: ", sendform);
-    formData = {};
   };
 
   //anime stuff
@@ -117,6 +100,20 @@ export default function LoginScreen() {
       }
     );
   };
+
+  const handleStartOver = () => {
+  setHasLogin(false);
+  setHasSelected(false);
+  setSelectedRole("none");
+  setGender(null);
+  setDateOfBirth(null);
+  setHasConfirm(false);
+  setName("");
+  setPassword("");
+  setPhone("");
+  setEmergency("");
+  setDiagnosis("");
+};
 
   const handleFormConfirm = () => {
     Alert.alert(
