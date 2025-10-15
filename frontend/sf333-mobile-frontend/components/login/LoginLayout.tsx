@@ -9,30 +9,23 @@ import {
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useLoginLayout } from "@/contexts/LoginLayoutProvider";
 
 interface LoginLayoutProps {
   children: React.ReactNode;
-  showBackButton?: boolean;
-  onBackPress?: () => void;
-  fadeBackButton?: Animated.Value;
-  fadeButton?: Animated.Value;
 }
 // await AntDesign.loadFont();
-export function LoginLayout({
-  children,
-  showBackButton,
-  onBackPress,
-  fadeBackButton,
-  fadeButton,
-}: LoginLayoutProps) {
+export function LoginLayout({ children }: LoginLayoutProps) {
+  const { showBackButton, onBackPress } = useLoginLayout();
+  // use context to control property
   return (
     <View style={styles.container}>
       {/* Back Button */}
-      {fadeBackButton ? (
+      {showBackButton ? (
         <Animated.View
           style={[
             styles.backButton,
-            { transform: [{ translateX: fadeBackButton }] },
+            { transform: [{ translateX: 0 }] },
           ]}
         >
           {showBackButton && (
@@ -63,13 +56,7 @@ export function LoginLayout({
 
       {/* Bottom */}
 
-      <Animated.View style={[styles.bottom, {opacity:fadeButton}]}>
-        {!showBackButton ? (
-          <Text style={styles.termsText}>Term of service</Text>
-        ):(
-          null
-        )}
-      </Animated.View>
+     
     </View>
   );
 }
@@ -80,8 +67,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   content: {
+    flex: 1,
     width: "100%",
-    alignItems: "center",
+    // alignItems: "center",
   },
   header: {
     fontSize: 46,
@@ -89,6 +77,7 @@ const styles = StyleSheet.create({
     color: "black",
     marginTop: 50,
     marginBottom: 50,
+    alignItems: "center",
   },
   bottom: {
     position: "absolute",
@@ -105,5 +94,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 200,
     height: 200,
+    alignItems: "center",
   },
 });

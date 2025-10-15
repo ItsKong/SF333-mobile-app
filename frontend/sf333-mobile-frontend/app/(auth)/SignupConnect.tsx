@@ -1,24 +1,32 @@
 import { View, Text, TextInput, Pressable, Animated } from "react-native";
 import { loginStyles } from "@/styles/login.style";
+import { useAuth } from "@/contexts/AuthProvider";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
+import { useLoginLayout } from "@/contexts/LoginLayoutProvider";
 
-interface SignupConnectProps {
-  role: "caretaker" | "caregiver";
-  connectCode: String | null;
-  fadeConnectContent: Animated.Value;
-  handleConnect: () => void;
-}
-
-export const SignupConnect = ({
-  role,
-  connectCode,
-  fadeConnectContent,
-  handleConnect,
-}: SignupConnectProps) => {
-  const isSupervisor = role === "caregiver";
+export default function SignupConnect() {
+  const { userRole } = useAuth();
+  const { setOnBackPress, setShowBackButton } = useLoginLayout();
+  const isSupervisor = userRole === "caregiver";
+  useFocusEffect(
+    useCallback(() => {
+      setOnBackPress(() => {
+        console.log("Back!");
+        //animation goes here!
+        setShowBackButton(true);
+        router.back();
+      });
+      return () => {
+        setOnBackPress(() => undefined);
+      };
+    }, [])
+  );
+  const handleConnect = () => {
+    router.replace("/(app)");
+  };
   return (
-    <Animated.View
-      style={[loginStyles.content, { opacity: fadeConnectContent }]}
-    >
+    <Animated.View style={[loginStyles.content, { opacity: 1 }]}>
       <Text>
         {isSupervisor
           ? "Please connect Your "
@@ -66,4 +74,4 @@ export const SignupConnect = ({
       )}
     </Animated.View>
   );
-};
+}

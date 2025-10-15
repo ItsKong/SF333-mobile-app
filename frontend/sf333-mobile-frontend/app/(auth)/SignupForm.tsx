@@ -1,5 +1,5 @@
 // components/login/SignupForm.tsx
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,41 +7,41 @@ import {
   Pressable,
   Animated,
   Platform,
+  Alert,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { loginStyles } from "@/styles/login.style";
 import { iosDatePicker } from "@/styles/iosDatePicker";
+import { useAuth } from "@/contexts/AuthProvider";
+import { useLoginLayout } from "@/contexts/LoginLayoutProvider";
+import { router, useFocusEffect } from "expo-router";
 
-interface SignupFormProps {
-  role: "caretaker" | "caregiver";
-  fadeInputContent: Animated.Value;
-  // Form data
-  name: string;
-  setName: (value: string) => void;
-  phone: string;
-  setPhone: (value: string) => void;
-  emergency?: string;
-  setEmergency?: (value: string) => void;
-  diagnosis?: string;
-  setDiagnosis?: (value: string) => void;
-  onConfirm: () => void;
-}
+export default function SignupForm() {
+  const { userRole } = useAuth();
+  const isSupervisor = userRole === "caregiver";
+  const { setOnBackPress, setShowBackButton } = useLoginLayout();
 
-export const SignupForm = ({
-  role,
-  fadeInputContent,
-  name,
-  setName,
-  phone,
-  setPhone,
-  emergency,
-  setEmergency,
-  diagnosis,
-  setDiagnosis,
-  onConfirm,
-}: SignupFormProps) => {
-  const isSupervisor = role === "caregiver";
+  useFocusEffect(
+    useCallback(() => {
+      setOnBackPress(() => {
+        console.log("Back!");
+        //animation goes here!
+        setShowBackButton(true);
+        router.back();
+      });
+      return () => {
+        setOnBackPress(() => undefined);
+      };
+    }, [])
+  );
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [emergency, setEmergency] = useState("");
+  const [diagnosis, setDiagnosis] = useState("");
+  const [sendform, setSendform] = useState({});
+  const [password, setPassword] = useState("");
 
   // Gender dropdown state (internal to component)
   const [gender, setGender] = useState(null);
@@ -110,7 +110,6 @@ export const SignupForm = ({
         />
       );
     }
-
     // iOS implementation
     return (
       <View style={iosDatePicker.iosPickerContainer}>
@@ -143,8 +142,35 @@ export const SignupForm = ({
     );
   };
 
+  const handleConfirm = () => {
+    const formData =
+      userRole === "caregiver"
+        ? { name, password, gender, dateOfBirth, phone, emergency, diagnosis }
+        : { name, password, gender, dateOfBirth, phone };
+    Alert.alert(
+      "Confirm Infomation",
+      "Please confirm your information.",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: "Ok",
+          onPress: () => {
+            console.log(formData);
+            console.log("Ok pressed");
+            router.push("/(auth)/SignupConnect");
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
   return (
-    <Animated.View style={[loginStyles.content, { opacity: fadeInputContent }]}>
+    <Animated.View style={[loginStyles.content, { opacity: 1 }]}>
       <Text>You are:</Text>
       <Text style={{ fontWeight: "bold" }}>
         {isSupervisor ? "Supervisor" : "Individual with a disability"}
@@ -221,7 +247,7 @@ export const SignupForm = ({
             loginStyles.confirmbutt,
             { backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7" },
           ]}
-          onPress={onConfirm}
+          onPress={() => handleConfirm()}
         >
           <Text>confirm</Text>
         </Pressable>
@@ -231,4 +257,4 @@ export const SignupForm = ({
       {renderDatePicker()}
     </Animated.View>
   );
-};
+}
