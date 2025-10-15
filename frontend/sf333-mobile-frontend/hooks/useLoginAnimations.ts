@@ -17,11 +17,59 @@ export function useLoginAnimations() {
   const fadeConnectContent = useRef(new Animated.Value(0)).current;
 
   /**
-   * Generic navigation function that handles transitions between any two screens
-   * @param from - Current screen
-   * @param to - Target screen
-   * @param beforeAnimation - Callback before animation starts
-   * @param afterAnimation - Callback after animation completes
+   * Screen configuration - defines which animations belong to each screen
+   * and their show/hide values
+   */
+  const screenConfig: Record<ScreenType, Array<{
+    value: Animated.Value;
+    showValue: number;
+    hideValue: number;
+  }>> = {
+    login: [
+      { value: fadeLoginContent, showValue: 1, hideValue: 0 },
+      { value: fadeBackButton, showValue: -100, hideValue: -100 },
+      { value: fadeButton, showValue: 0, hideValue: 0 },
+      { value: fadeButtonText, showValue: 0, hideValue: 0 },
+      { value: fadeTextArea, showValue: 0, hideValue: 0 },
+      { value: fadeText, showValue: 0, hideValue: 0 },
+      { value: fadeInputContent, showValue: 0, hideValue: 0 },
+      { value: fadeConnectContent, showValue: 0, hideValue: 0 },
+    ],
+    roleSelection: [
+      { value: fadeButton, showValue: 1, hideValue: 0 },
+      { value: fadeButtonText, showValue: 1, hideValue: 0 },
+      { value: fadeBackButton, showValue: 0, hideValue: -100 },
+      { value: fadeLoginContent, showValue: 0, hideValue: 0 },
+      { value: fadeTextArea, showValue: 0, hideValue: 0 },
+      { value: fadeText, showValue: 0, hideValue: 0 },
+      { value: fadeInputContent, showValue: 0, hideValue: 0 },
+      { value: fadeConnectContent, showValue: 0, hideValue: 0 },
+    ],
+    form: [
+      { value: fadeInputContent, showValue: 1, hideValue: 0 },
+      { value: fadeTextArea, showValue: 1, hideValue: 0 },
+      { value: fadeText, showValue: 1, hideValue: 0 },
+      { value: fadeBackButton, showValue: 0, hideValue: -100 },
+      { value: fadeLoginContent, showValue: 0, hideValue: 0 },
+      { value: fadeButton, showValue: 0, hideValue: 0 },
+      { value: fadeButtonText, showValue: 0, hideValue: 0 },
+      { value: fadeConnectContent, showValue: 0, hideValue: 0 },
+    ],
+    connect: [
+      { value: fadeConnectContent, showValue: 1, hideValue: 0 },
+      { value: fadeTextArea, showValue: 1, hideValue: 0 },
+      { value: fadeText, showValue: 1, hideValue: 0 },
+      { value: fadeBackButton, showValue: 0, hideValue: -100 },
+      { value: fadeLoginContent, showValue: 0, hideValue: 0 },
+      { value: fadeButton, showValue: 0, hideValue: 0 },
+      { value: fadeButtonText, showValue: 0, hideValue: 0 },
+      { value: fadeInputContent, showValue: 0, hideValue: 0 },
+    ],
+  };
+
+  /**
+   * Universal navigation function
+   * Transitions from any screen to any other screen dynamically
    */
   const navigateToScreen = (
     from: ScreenType,
@@ -31,127 +79,80 @@ export function useLoginAnimations() {
   ) => {
     beforeAnimation();
 
-    // Get the animated values for from and to screens
-    const fromAnimations = getScreenAnimations(from);
-    const toAnimations = getScreenAnimations(to);
+    const fromConfig = screenConfig[from];
+    const toConfig = screenConfig[to];
 
-    // Fade out current screen
-    Animated.parallel(
-      fromAnimations.map(anim => 
+    // Fade out elements that need to hide
+    const fadeOutAnimations = fromConfig
+      .filter(anim => {
+        const toAnim = toConfig.find(t => t.value === anim.value);
+        return !toAnim || toAnim.showValue !== anim.showValue;
+      })
+      .map(anim =>
         Animated.timing(anim.value, {
           toValue: anim.hideValue,
           duration: 300,
           useNativeDriver: true,
         })
-      )
-    ).start(() => {
+      );
+
+    // Execute fade out
+    Animated.parallel(fadeOutAnimations).start(() => {
       InteractionManager.runAfterInteractions(() => {
         afterAnimation();
 
-        // Fade in target screen
-        Animated.parallel(
-          toAnimations.map(anim =>
+        // Fade in elements that need to show
+        const fadeInAnimations = toConfig
+          .filter(anim => {
+            const fromAnim = fromConfig.find(f => f.value === anim.value);
+            return !fromAnim || fromAnim.showValue !== anim.showValue;
+          })
+          .map(anim =>
             Animated.timing(anim.value, {
               toValue: anim.showValue,
               duration: 500,
               useNativeDriver: true,
             })
-          )
-        ).start();
+          );
+
+        // Execute fade in
+        Animated.parallel(fadeInAnimations).start();
       });
     });
   };
 
   /**
-   * Helper function to get animations for each screen
+   * Initialize a screen's animation values
+   * Useful for setting initial state or resetting
    */
-  const getScreenAnimations = (screen: ScreenType) => {
-    switch (screen) {
-      case 'login':
-        return [
-          { value: fadeLoginContent, showValue: 1, hideValue: 0 },
-          { value: fadeBackButton, showValue: -100, hideValue: -100 },
-        ];
-      case 'roleSelection':
-        return [
-          { value: fadeButton, showValue: 1, hideValue: 0 },
-          { value: fadeButtonText, showValue: 1, hideValue: 0 },
-          { value: fadeBackButton, showValue: 0, hideValue: -100 },
-        ];
-      case 'form':
-        return [
-          { value: fadeInputContent, showValue: 1, hideValue: 0 },
-          { value: fadeTextArea, showValue: 1, hideValue: 0 },
-          { value: fadeText, showValue: 1, hideValue: 0 },
-          { value: fadeBackButton, showValue: 0, hideValue: -100 },
-        ];
-      case 'connect':
-        return [
-          { value: fadeConnectContent, showValue: 1, hideValue: 0 },
-          { value: fadeTextArea, showValue: 1, hideValue: 0 },
-          { value: fadeText, showValue: 1, hideValue: 0 },
-          { value: fadeBackButton, showValue: 0, hideValue: -100 },
-        ];
-      default:
-        return [];
+  const setScreenState = (screen: ScreenType, animated: boolean = false) => {
+    const config = screenConfig[screen];
+    
+    if (animated) {
+      Animated.parallel(
+        config.map(anim =>
+          Animated.timing(anim.value, {
+            toValue: anim.showValue,
+            duration: 0,
+            useNativeDriver: true,
+          })
+        )
+      ).start();
+    } else {
+      config.forEach(anim => {
+        anim.value.setValue(anim.showValue);
+      });
     }
   };
 
-  // Convenience methods for common transitions
-  const animateToLogin = (beforeAnimation: () => void, afterAnimation: () => void) => {
-    navigateToScreen('roleSelection', 'login', beforeAnimation, afterAnimation);
-  };
-
-  const animateToRoleSelection = (beforeAnimation: () => void, afterAnimation: () => void) => {
-    navigateToScreen('login', 'roleSelection', beforeAnimation, afterAnimation);
-  };
-
-  const animateToForm = (beforeAnimation: () => void, afterAnimation: () => void) => {
-    navigateToScreen('roleSelection', 'form', beforeAnimation, afterAnimation);
-  };
-
-  const animateToConnect = (beforeAnimation: () => void, afterAnimation: () => void) => {
-    navigateToScreen('form', 'connect', beforeAnimation, afterAnimation);
-  };
-
-  const animateBackToForm = (beforeAnimation: () => void, afterAnimation: () => void) => {
-    navigateToScreen('connect', 'form', beforeAnimation, afterAnimation);
-  };
-
-  const animateBackToRoleSelection = (beforeAnimation: () => void, afterAnimation: () => void) => {
-    navigateToScreen('form', 'roleSelection', beforeAnimation, afterAnimation);
-  };
-
-  const animateBackToLogin = (beforeAnimation: () => void, afterAnimation: () => void) => {
-    navigateToScreen('roleSelection', 'login', beforeAnimation, afterAnimation);
-  };
-
-  // Legacy method names for compatibility
-  const animateToSelection = animateToRoleSelection;
-  const animateBack = animateBackToLogin;
-  const animateBackToInput = animateBackToForm;
-
   return {
-    // New flexible navigation
+    // Main navigation function
     navigateToScreen,
     
-    // Forward navigation
-    animateToLogin,
-    animateToRoleSelection,
-    animateToForm,
-    animateToConnect,
+    // Helper to set screen state
+    setScreenState,
     
-    // Backward navigation
-    animateBackToForm,
-    animateBackToRoleSelection,
-    animateBackToLogin,
-    
-    // Legacy names
-    animateToSelection,
-    animateBack,
-    animateBackToInput,
-    
-    // Animated values
+    // Animated values (for direct use in components)
     fadeBackButton,
     fadeTextArea,
     fadeText,

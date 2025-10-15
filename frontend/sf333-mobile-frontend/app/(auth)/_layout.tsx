@@ -1,11 +1,21 @@
-import { HeaderShownContext } from "@react-navigation/elements";
 import { Stack } from "expo-router";
+import { LoginLayout } from "@/components/login/LoginLayout";
+import { LoginLayoutProvider } from "@/contexts/LoginLayoutProvider";
 
-export default function AuthScreen() {
+export default function AuthLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false}}>
-      <Stack.Screen name="login" />
-      {/* <Stack.Screen name="signup" /> */}
-    </Stack>
+    <LoginLayoutProvider>
+      <LoginLayout>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="LoginForm" />
+          <Stack.Screen name="RoleSelection" />
+          <Stack.Screen name="SignupForm" />
+          <Stack.Screen name="SignupConnect" />
+          <Stack.Screen name="ForgotPassword" />
+          <Stack.Screen name="EnterOTP" />
+          <Stack.Screen name="ResetPassword" />
+        </Stack>
+      </LoginLayout>
+    </LoginLayoutProvider>
   );
 }
