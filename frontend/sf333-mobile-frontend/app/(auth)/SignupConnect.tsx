@@ -55,7 +55,7 @@ export default function SignupConnect() {
       ) : (
         <>
           <View style={loginStyles.formInput}>
-            <Text>{"connect code here!"}</Text>
+            <Text>{"Random code here!"}</Text>
           </View>
           <View>
             <Pressable

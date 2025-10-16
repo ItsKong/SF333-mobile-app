@@ -1,5 +1,5 @@
 // components/login/SignupForm.tsx
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import { loginStyles } from "@/styles/login.style";
 import { iosDatePicker } from "@/styles/iosDatePicker";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useLoginLayout } from "@/contexts/LoginLayoutProvider";
-import { router, useFocusEffect } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 
 export default function SignupForm() {
   const { userRole } = useAuth();
@@ -40,7 +40,6 @@ export default function SignupForm() {
   const [phone, setPhone] = useState("");
   const [emergency, setEmergency] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
-  const [sendform, setSendform] = useState({});
   const [password, setPassword] = useState("");
 
   // Gender dropdown state (internal to component)
@@ -170,7 +169,7 @@ export default function SignupForm() {
   };
 
   return (
-    <Animated.View style={[loginStyles.content, { opacity: 1 }]}>
+    <Animated.View style={[loginStyles.signUpContent, { opacity: 1 }]}>
       <Text>You are:</Text>
       <Text style={{ fontWeight: "bold" }}>
         {isSupervisor ? "Supervisor" : "Individual with a disability"}
@@ -179,9 +178,15 @@ export default function SignupForm() {
       {/* Name Input */}
       <TextInput
         style={loginStyles.formInput}
-        placeholder="Name"
+        placeholder="Username"
         value={name}
         onChangeText={setName}
+      />
+      <TextInput
+        style={loginStyles.formInput}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
       />
 
       {/* Gender Dropdown */}
@@ -233,7 +238,7 @@ export default function SignupForm() {
           <Text>Main diagnosis for your Supervisee:</Text>
           <TextInput
             style={loginStyles.formInput}
-            placeholder="(ADHD, Autism)"
+            placeholder="ADHD, Autism"
             value={diagnosis}
             onChangeText={setDiagnosis}
           />
@@ -245,6 +250,7 @@ export default function SignupForm() {
         <Pressable
           style={({ pressed }) => [
             loginStyles.confirmbutt,
+            { marginTop: 10 },
             { backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7" },
           ]}
           onPress={() => handleConfirm()}
@@ -253,6 +259,13 @@ export default function SignupForm() {
         </Pressable>
       </View>
 
+      {/* TOS */}
+      <Text style={{ fontSize: 16, marginTop: 20 }}>
+        By signing up, I agree to Fantistic’s{" "}
+        <Link href={"https://www.youtube.com/"}>
+          <Text style={{ color: "#1261B1" }}>Term Of Service</Text>
+        </Link>
+      </Text>
       {/* Date Picker Modal */}
       {renderDatePicker()}
     </Animated.View>
