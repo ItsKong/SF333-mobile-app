@@ -16,12 +16,16 @@ export const loginStyles = StyleSheet.create({
   content: {
     width: "100%",
     alignItems: "center",
-    margin:0,
+    marginTop: 50,
+  },
+  signUpContent: {
+    width: "100%",
+    alignItems: "center",
   },
   selectRoleContent: {
     width: "100%",
     alignItems: "center",
-    marginTop: 50,
+    marginTop: 100,
   },
   text: {
     color: "black",
@@ -86,10 +90,11 @@ export const loginStyles = StyleSheet.create({
   formInput: {
     backgroundColor: '#DBE8F5',
     width: '70%',
-    height: 50,
+    height: 45,
     borderRadius: 20,
     marginTop:8,
-    padding: 14,
+    paddingTop: 12,
+    padding: 10,
     marginBottom:8,
   },
   loginContent: {
@@ -98,6 +103,7 @@ export const loginStyles = StyleSheet.create({
     borderRadius: 20,
     width: 233,
     height: 112,
+    marginTop: 50,
   },
   loginForm: {
     backgroundColor: '#DBE8F5',

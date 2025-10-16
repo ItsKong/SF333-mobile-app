@@ -17,16 +17,14 @@ interface LoginLayoutProps {
 // await AntDesign.loadFont();
 export function LoginLayout({ children }: LoginLayoutProps) {
   const { showBackButton, onBackPress } = useLoginLayout();
+  
   // use context to control property
   return (
     <View style={styles.container}>
       {/* Back Button */}
       {showBackButton ? (
         <Animated.View
-          style={[
-            styles.backButton,
-            { transform: [{ translateX: 0 }] },
-          ]}
+          style={[styles.backButton, { transform: [{ translateX: 0 }] }]}
         >
           {showBackButton && (
             <Pressable onPress={onBackPress}>
@@ -38,9 +36,7 @@ export function LoginLayout({ children }: LoginLayoutProps) {
             </Pressable>
           )}
         </Animated.View>
-      ) : (
-       null
-      )}
+      ) : null}
 
       {/* Header */}
       <View style={styles.header}>
@@ -52,11 +48,9 @@ export function LoginLayout({ children }: LoginLayoutProps) {
       </View>
 
       {/* Main Content */}
-      <View style={styles.content}>{children}</View>
+        <View style={styles.content}>{children}</View>
 
       {/* Bottom */}
-
-     
     </View>
   );
 }
@@ -69,7 +63,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     width: "100%",
-    // alignItems: "center",
+    marginTop: -50,
   },
   header: {
     fontSize: 46,
