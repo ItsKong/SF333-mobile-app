@@ -3,15 +3,18 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 type AuthContextType = {
   userRole: string ;
   setUserRole: (role: string) => void;
+  username: string;
+  setUsername: (username: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<string >("none");
+  const [username, setUsername] = useState<string >("none");
 
   return (
-    <AuthContext.Provider value={{ userRole, setUserRole }}>
+    <AuthContext.Provider value={{ userRole, setUserRole, username, setUsername }}>
       {children}
     </AuthContext.Provider>
   );

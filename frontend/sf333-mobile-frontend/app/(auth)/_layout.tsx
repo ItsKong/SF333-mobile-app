@@ -1,7 +1,6 @@
 import { Stack } from "expo-router";
 import { LoginLayout } from "@/components/login/LoginLayout";
 import { LoginLayoutProvider } from "@/contexts/LoginLayoutProvider";
-import { SignUpFormLayout } from "@/components/login/SignUpFormLayout";
 
 export default function AuthLayout() {
   return (

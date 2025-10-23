@@ -1,353 +1,125 @@
+import { cache, use, useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAuth } from "@/contexts/AuthProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTaker } from "@/contexts/TakerContexts";
 
-export default function HomePage() {
-  const router = useRouter();
-  const [screen, setScreen] = useState<"home" | "mood">("home"); 
-  const [rating, setRating] = useState(0);
-  const [showerTaken, setShowerTaken] = useState<boolean | null>(null);
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
-
-  const tasks = [
-    { id: "1", title: "Make a bed", time: "08:00 AM" },
-    { id: "2", title: "Brush teeth", time: "08:15 AM" },
-    { id: "3", title: "Take a shower", time: "08:30 AM" },
-  ];
-
-  // ---------- Home ----------
-  if (screen === "home") {
-    return (
-      <View style={{ flex: 1, position: "relative" }}>
-        <ScrollView contentContainerStyle={styles.container}>
-        {/* Back Button for Home Screen */}
-        <View style={styles.backButton}>
-          <Pressable onPress={() => router.replace("/(auth)/login")}> 
-            <MaterialCommunityIcons
-                name="arrow-left-circle"
-                size={43}
-                color="#5E6CA8"
-              />
-          </Pressable>
-        </View>
-          {/* Mood Tracking Header */}
-          <Text style={styles.header}>Mood tracking</Text>
-          {/* Mood Box → Mood Tracking */}
-          <Pressable style={styles.moodBox} onPress={() => setScreen
-            ("mood")}>
-            <View style={styles.moodRow}>
-              {["#BCE69B", "#EE9A9A", "#BCE69B", "#FFF176"].map((color, index) => (
-                <View key={index} style={[styles.moodCircle, { backgroundColor: color }]} />
-              ))}
-            </View>
-          {/* Show selected mood*/}
-          {selectedMood && (
-            <Text style={{ marginTop: 15, fontSize: 16, fontWeight: "500"}}>
-              Last mood: {selectedMood}
-            </Text>
-          )}
-          </Pressable>
-
-          {/* Rating Box */}
-          <View style={styles.box}>
-            <Text style={styles.boxTitle}>You did great!</Text>
-            <View style={styles.starRow}>
-              {[1, 2, 3].map((star) => (
-                <Pressable key={star} onPress={() => setRating(star)}>
-                  <Text
-                    style={[
-                      styles.star,
-                      rating >= star && styles.starActive,
-                    ]}
-                  >
-                    ★
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          {/* Shower Box */}
-          <View style={styles.box}>
-            <Text style={styles.showerText}>Did you take a shower?</Text>
-            <View style={styles.showerRow}>
-              <Pressable
-                style={[styles.showerButton, { backgroundColor: "#66BB6A" }]}
-                onPress={() => setShowerTaken(true)}
-              >
-                <Text style={styles.showerButtonText}>YES</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.showerButton, { backgroundColor: "#E57373" }]}
-                onPress={() => setShowerTaken(false)}
-              >
-                <Text style={styles.showerButtonText}>NO</Text>
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Today Task */}
-          <Text style={styles.taskHeader}>Today's Tasks:</Text>
-          <View style={styles.taskBox}>
-            {tasks.map((task) => (
-              <View key={task.id} style={styles.taskCard}>
-                <Text style={styles.taskTitle}>{task.title}</Text>
-                <Text style={styles.taskTime}>{task.time}</Text>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-
-        {/* SOS Button at bottom */}
-        <View style={styles.sosContainer}>
-          <Pressable
-            style={styles.sosButton}
-            onPress={() => console.log("SOS Pressed")}
-          >
-            <Text style={styles.sosText}>SOS</Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
-  // ----------  Mood Tracking ----------
-  if (screen === "mood") {
-    return (
-      <View style={styles.moodContainer}>
-        {/* Back Button */}
-        <View style={styles.backButton}>
-          <Pressable onPress={() => setScreen("home")}> 
-            <MaterialCommunityIcons
-                name="arrow-left-circle"
-                size={43}
-                color="#5E6CA8"
-              />
-          </Pressable>
-        </View>
-        <Text style={styles.headerBox}>Mood tracking</Text>
-        <Text style={styles.question}>How are you feeling?...</Text>
-
-        <Pressable
-          style={[styles.moodButton, { backgroundColor: "#A5D6A7" }]}
-          onPress={() => {
-            setSelectedMood("HAPPY");
-            setScreen("home");
-          }}
-        >
-          <Text style={styles.moodText}>HAPPY</Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.moodButton, { backgroundColor: "#FFF176" }]}
-          onPress={() => {
-            setSelectedMood("SAD");
-            setScreen("home");
-          }}
-        >
-          <Text style={styles.moodText}>SAD</Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.moodButton, { backgroundColor: "#EF9A9A" }]}
-          onPress={() => {
-            setSelectedMood("ANGRY");
-            setScreen("home");
-          }}
-        >
-          <Text style={styles.moodText}>ANGRY</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  return null;
+// FETCHING DATA IN HERE!
+// SEND USERNAME TO GET USER DATA.
+interface TaskItem {
+  id: number;
+  title: string;
+  time: string;
 }
 
-// ---------- Styles ----------
+const moodColors: Record<string, string> = {
+  happy: "#BCE69B",
+  sad: "#FFF176",
+  angry: "#EE9A9A",
+  neutral: "#C0C0C0",
+};
+
+
+const STORAGE_KEY = "takerdata";
+
+export default function AppIndex() {
+  // const [pastmoods, setPastMoods] = useState<MoodItem[]>([]);
+  // const [star, setStar] = useState<number[]>([]);
+  // const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const { setPastMoods, setTasks, setStar } = useTaker();
+  const [isLoading, setIsLoading] = useState(true);
+  const [minload, setminload] = useState(false);
+  const { userRole } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchingUserData = async () => {
+      try {
+        const mooddata = [
+          { date: 1, mood: "happy" },
+          { date: 2, mood: "sad" },
+          { date: 3, mood: "angry" },
+          { date: 4, mood: "happy" },
+          { date: 5, mood: "sad" },
+          { date: 6, mood: "angry" },
+          { date: 7, mood: "angry" },
+        ];
+
+        const tasksdata: TaskItem[] = [
+          { id: 1, title: "Make a bed", time: "08:00 AM" },
+          { id: 2, title: "Brush teeth", time: "08:15 AM" },
+          { id: 3, title: "Take a shower", time: "08:30 AM" },
+          { id: 4, title: "Make a bed", time: "08:00 AM" },
+          { id: 5, title: "Brush teeth", time: "08:15 AM" },
+          { id: 7, title: "Take a shower", time: "08:30 AM" },
+        ];
+
+        const stardata = 3;
+        const starArr = Array.from({ length: stardata }, (_, i) => i + 1);
+
+        const withColor = mooddata.map((item) => ({
+          ...item,
+          color: moodColors[item.mood],
+        }));
+
+        // await AsyncStorage.setItem(
+        //   STORAGE_KEY,
+        //   JSON.stringify({
+        //     pastmoods: withColor,
+        //     tasks: tasksdata,
+        //     star: starArr,
+        //   })
+        // );
+
+        setPastMoods(withColor);
+        setTasks(tasksdata);
+        setStar(starArr);
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Failed to load data:", error);
+      }
+    };
+
+    fetchingUserData();
+  }, []);
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+          setminload(true)
+      }, 2000);
+      return () => clearTimeout(timer);
+    }, []);
+
+  // 2.
+  useEffect(() => {
+    if (!isLoading && minload) {
+      router.replace("/(app)/taker/home");
+    }
+  }, [isLoading, minload, router]);
+
+  // Show loading while redirecting
+  return (
+    <View style={styles.container}>
+      <Image
+        source={require("@/assets/images/fantistic-high-resolution-logo-transparent.png")} // ใส่ path ของรูปโลโก้คุณ
+        style={styles.logo}
+        resizeMode="contain"
+      />
+      <ActivityIndicator size="large" color="#000" style={{ marginTop: 20 }} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "#F9F9F9",
-    alignItems: "stretch",
-    gap: 15,
-  },
-  header: {  
-    marginTop: 80,
-    fontSize: 20,
-    fontWeight: "500",
-    color: "#333",
-    backgroundColor: "#e3f2fd",
-    width: "40%",
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  moodBox: {
-    backgroundColor: "#F4EEE0",
-    borderRadius: 12,
-    padding: 15,
-  },
-  moodRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    gap: 15,
-  },
-  moodCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  box: {
-    backgroundColor: "#DBE8F5",
-    borderRadius: 12,
-    padding: 15,
-  },
-  boxTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  starRow: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-  },
-  star: {
-    fontSize: 28,
-    color: "#ccc",
-    marginRight: 5,
-  },
-  starActive: {
-    color: "#FFF176",
-  },
-  showerText: {
-    fontSize: 15,
-    fontWeight: "500",
-    marginBottom: 10,
-  },
-  showerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  showerButton: {
     flex: 1,
-    marginHorizontal: 5,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  showerButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  taskHeader: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginVertical: 10,
-  },
-  taskBox: {
-    backgroundColor: "#DFE9F5",
-    borderRadius: 12,
-    padding: 15,
-  },
-  taskCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  taskTitle: {
-    fontSize: 18,
-    color: "#000",
-  },
-  taskTime: {
-    fontSize: 18,
-    color: "#000",
-    fontWeight: "600",
-  },
-  sosContainer: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    height: 100,
-    backgroundColor: "#5A5A5A",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sosButton: {
-    width: 90,
-    height: 90,
-    borderRadius: 50,
-    backgroundColor: "#F56C6C",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -80,
+    backgroundColor: "#DBE8F5",
   },
-  sosText: {
-    color: "#fff",
-    fontSize: 25,
-    fontWeight: "bold",
+  logo: {
+    width: 200,
+    height: 200,
   },
-
-// Mood screen
-moodContainer: {
-  flex: 1,
-  padding: 30,
-  backgroundColor: "#fff",
-  alignItems: "center",
-},
-headerBox: {
-  marginTop: 70,
-  fontSize: 26,
-  fontWeight: "700",
-  color: "#333",
-  backgroundColor: "#e3f2fd",
-  paddingHorizontal: 30,
-  paddingVertical: 15,
-  borderRadius: 10,
-  alignSelf: "center",
-  textAlign: "center",
-  shadowColor: "#000",
-  shadowOpacity: 0.08,
-  shadowOffset: { width: 0, height: 2 },
-  shadowRadius: 4,
-  elevation: 3,
-},
-question: {
-  marginTop: 25,
-  marginBottom: 35,
-  fontSize: 29,
-  fontWeight: "500",
-  color: "#444",
-},
-moodButton: {
-  width: "90%",
-  paddingVertical: 22,
-  borderRadius: 12,
-  alignItems: "center",
-  marginVertical: 12,
-  shadowColor: "#000",
-  shadowOpacity: 0.1,
-  shadowOffset: { width: 0, height: 3 },
-  shadowRadius: 5,
-  elevation: 3,
-},
-moodText: {
-  fontSize: 20,
-  fontWeight: "600",
-  color: "#333",
-},
-backButton: {
-  position: "absolute",
-  left: "7%",
-  top: "5%",
-},
 });
