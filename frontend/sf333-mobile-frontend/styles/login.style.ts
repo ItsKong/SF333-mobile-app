@@ -6,6 +6,9 @@ export const loginStyles = StyleSheet.create({
     // justifyContent: "center",
     alignItems: "center",
   },
+  greeting: {
+    fontSize: 24,
+  },
   button: {
     justifyContent: "center",
     alignItems: "center",
