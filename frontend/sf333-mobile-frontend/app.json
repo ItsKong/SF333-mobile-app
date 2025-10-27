@@ -1,22 +1,24 @@
 {
   "expo": {
-    "name": "sf333-mobile-frontend",
+    "name": "Fantistic",
     "slug": "sf333-mobile-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/fantistic-high-resolution-logo.png",
     "scheme": "sf333mobilefrontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.sf333mobilefrontend"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/fantistic-high-resolution-logo-transparent.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.sf333mobilefrontend"
     },
     "web": {
       "bundler": "metro",

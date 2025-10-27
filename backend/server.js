@@ -1,41 +1,55 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const admin = require("firebase-admin");
+// index.js
+require('dotenv').config();
+const express = require('express');
+const admin = require('firebase-admin');
 
-const serviceAccount = require("./firebaseKey.json");
-
+// Initialize Firebase Admin with environment variables
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://fantistic-11b5f.firebaseio.com",
+  credential: admin.credential.cert({
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  })
 });
 
 const db = admin.firestore();
-global.db = db;
-
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
 
-// Example route
-app.get("/users", async (req, res) => {
-  const snapshot = await db.collection("users").get();
-  const users = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  res.json(users);
+app.use(express.json());
+
+// Health check endpoint (important for Render)
+// app.get('/', (req, res) => {
+//   res.json({ status: 'Server is running' });
+// });
+
+const testRoutes = require('./src/routes/test');
+const disabilityRoutes = require('./src/routes/disability');
+
+
+// Your API endpoints
+app.use('/', testRoutes);
+app.use('/disability', disabilityRoutes);
+
+
+// ----user api call----
+// app.post('/users', async (req, res) => {
+//   try {
+//     const { name, email } = req.body;
+//     const docRef = await db.collection('users').add({ 
+//       name, 
+//       email,
+//       createdAt: admin.firestore.FieldValue.serverTimestamp()
+//     });
+//     res.status(201).json({ 
+//       success: true, 
+//       id: docRef.id 
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-app.post("/users", async (req, res) => {
-  const data = req.body;
-  const docRef = await db.collection("users").add(data);
-  res.json({ id: docRef.id });
-});
-
-// Link routes
-const caretakersRoutes = require('./routes/caretakers');
-const caregiversRoutes = require('./routes/caregivers');
-
-app.use('/caretakers', caretakersRoutes);
-app.use('/caregivers', caregiversRoutes);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
