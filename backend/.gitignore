@@ -1,2 +1,3 @@
-node_modules
-backend/firebaseKey.json
+node_modules/
+src/serviceAccountKey.json
+.env
