@@ -1,11 +1,17 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-
+import { useGiver } from "@/contexts/GiverContexts";
 
 // Mock StatsCard Component
 const StatsCard = ({ title, value }: { title: string; value: string }) => (
   <View style={styles.statsCard}>
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
       <Text style={styles.statsTitle}>{title}</Text>
       <Text style={styles.statsValue}>{value}</Text>
     </View>
@@ -34,6 +40,8 @@ interface MoodHistoryItem {
 }
 
 export default function Dashboard() {
+  const {pastMoods} = useGiver();
+
   const taskHistory: TaskHistoryItem[] = [
     { task: "Taking a shower", date: "21 Aug 2025", status: "y" },
   ];
@@ -46,14 +54,12 @@ export default function Dashboard() {
 
   return (
     <ScrollView style={styles.container}>
-
       {/* Stats Overview */}
       <StatsCard title="Percentage of completed tasks" value="83%" />
 
       {/* Weekly Task History */}
       <Text style={styles.cardTitle}>Weekly Task History</Text>
       <View style={styles.card}>
-
         {/* Table Header */}
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderText, { flex: 2 }]}>Tasks</Text>
@@ -81,7 +87,6 @@ export default function Dashboard() {
       {/* Mood History */}
       <Text style={styles.cardTitle}>Mood History</Text>
       <View style={styles.card}>
-
         {/* Table Header */}
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderText, { flex: 1 }]}>Mood</Text>
@@ -101,11 +106,21 @@ export default function Dashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F7F9FC", padding: 16 },
-  headerContainer: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  statsCard: {  backgroundColor: "#DBE8F5", padding: 16, borderRadius: 12, marginTop: 10, marginBottom: 20 },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  statsCard: {
+    backgroundColor: "#DBE8F5",
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 10,
+    marginBottom: 20,
+  },
   statsTitle: { fontSize: 16, fontWeight: "600", marginBottom: 8 },
   statsValue: { fontSize: 28, fontWeight: "bold", color: "#5E6CA8" },
-  card: { 
+  card: {
     backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
@@ -116,8 +131,19 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardTitle: { fontSize: 18, fontWeight: "600", marginBottom: 12 },
-  tableHeader: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#E5E7EB", paddingBottom: 6, marginBottom: 8 },
-  tableHeaderText: { fontWeight: "600", fontSize: 14, color: "#6B7280", textAlign: "center" },
+  tableHeader: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    paddingBottom: 6,
+    marginBottom: 8,
+  },
+  tableHeaderText: {
+    fontWeight: "600",
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+  },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 6 },
   taskText: { fontSize: 14, textAlign: "left", color: "#111827" },
   dateText: { fontSize: 14, textAlign: "center", color: "#6B7280" },
