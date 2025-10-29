@@ -1,7 +1,8 @@
 added firebase firestore
+
 api keys will be listed here.
 
-** HOW TO USE BACKEND SERVER **
+**HOW TO USE BACKEND SERVER**
 
 1.Get you own Firebase Firestore project or send your email to 'Mon' naja
 
@@ -10,10 +11,15 @@ api keys will be listed here.
 3.npm install in backend directory
 
 4.Create .env file put these following variables inside the file
+
 PORT = 3000
+
 FIREBASE_PROJECT_ID=
+
 FIREBASE_CLIENT_EMAIL=
+
 FIREBASE_PRIVATE_KEY=
+
 5.Put keys you've downloaded or got from 'Mon' to those variables above
 
 6.Open Terminal or Command Shell and use command "ifconfig | grep inet" and copy your inet IP (Something which is not a 127.xxx.xx.xx and it depends on WIFI you use, if you change WIFI inet IP will also change. So you have to change your IP in the code again)
