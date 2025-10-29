@@ -18,9 +18,9 @@ export default function AppIndex() {
 
   useEffect(() => {
       if (userRole === "caregiver") {
-        router.replace("/(app)/giver");
+        router.replace("/(app)/(giver)");
       } else {
-        router.replace("/(app)/taker");
+        router.replace("/(app)/(taker)");
       }
   }, []);
 

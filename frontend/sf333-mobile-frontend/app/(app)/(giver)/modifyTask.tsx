@@ -1,19 +1,37 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-export default function EditTask() {
-  const router = useRouter();
-  const { id, name, date, time, description } = useLocalSearchParams();
+interface TaskParams {
+  id: string;
+  name: string;
+  date: string;
+  time: string;
+  description?: string; // description is optional
+}
 
-  const [task, setTask] = useState(name as string);
-  const [taskDate, setTaskDate] = useState(date as string);
-  const [taskTime, setTaskTime] = useState(time as string);
-  const [taskDescription, setTaskDescription] = useState(
-    (description as string) || ""
-  );
+
+export default function EditmodifyTaskTask() {
+  const router = useRouter();
+  const params = useLocalSearchParams() as unknown as Partial<TaskParams>;
+  const [id , setId] = useState(0);
+  const [task, setTask] = useState('');
+  const [taskDate, setTaskDate] = useState('');
+  const [taskTime, setTaskTime] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  useFocusEffect(
+    useCallback(() => {
+      const { id, name, date, time, description } = params;
+      if(id) setId(id);
+      if (name) setTask(name);
+      if (date) setTaskDate(date);
+      if (time) setTaskTime(time);
+      setTaskDescription((description as string) || "");
+      return () => null
+    },[params])
+  )
 
   const handleSave = () => {
     // TODO: update tasks in global state /storage
@@ -31,7 +49,7 @@ export default function EditTask() {
     <LinearGradient colors={["#f8fafc", "#f1f5f9"]} style={styles.container}>
       {/* Back Button for Home Screen */}
       <View style={styles.backButton}>
-        <Pressable onPress={() => router.replace("/(app)/giver")}>
+        <Pressable onPress={() => router.replace('/tasks')}>
           <MaterialCommunityIcons
             name="arrow-left-circle"
             size={43}

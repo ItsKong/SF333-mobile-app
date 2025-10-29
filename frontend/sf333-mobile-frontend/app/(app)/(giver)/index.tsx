@@ -1,9 +1,11 @@
+// FETCHING TASK MOOD DATA
+
 import { cache, use, useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTaker } from "@/contexts/TakerContexts";
+import { useGiver } from "@/contexts/GiverContexts";
 
 // FETCHING DATA IN HERE!
 // SEND USERNAME TO GET USER DATA.
@@ -20,14 +22,16 @@ const moodColors: Record<string, string> = {
   neutral: "#C0C0C0",
 };
 
+const moodemoji: Record<string, string> = {
+  happy: "😀",
+  sad: "😥",
+  angry: "😠",
+};
 
 const STORAGE_KEY = "takerdata";
 
 export default function AppIndex() {
-  // const [pastmoods, setPastMoods] = useState<MoodItem[]>([]);
-  // const [star, setStar] = useState<number[]>([]);
-  // const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const { setPastMoods, setTasks, setStar } = useTaker();
+  const { setPastMoods, setTasks, setTodayMood } = useGiver();
   const [isLoading, setIsLoading] = useState(true);
   const [minload, setminload] = useState(false);
   const { userRole } = useAuth();
@@ -36,6 +40,8 @@ export default function AppIndex() {
   useEffect(() => {
     const fetchingUserData = async () => {
       try {
+
+        const todayMood = { mood: "angry", date:0, color: "#EE9A9A", emoji: "😠"};
         const mooddata = [
           { date: 1, mood: "happy" },
           { date: 2, mood: "sad" },
@@ -46,21 +52,23 @@ export default function AppIndex() {
           { date: 7, mood: "angry" },
         ];
 
-        const tasksdata: TaskItem[] = [
-          { id: 1, title: "Make a bed", time: "08:00 AM" },
-          { id: 2, title: "Brush teeth", time: "08:15 AM" },
-          { id: 3, title: "Take a shower", time: "08:30 AM" },
-          { id: 4, title: "Make a bed", time: "08:00 AM" },
-          { id: 5, title: "Brush teeth", time: "08:15 AM" },
-          { id: 7, title: "Take a shower", time: "08:30 AM" },
+        const tasks = [
+          { id: 1, title: "Take a shower", status: "DONE" },
+          { id: 2, title: "Have a lunch", status: "DONE" },
+          { id: 3, title: "Brush teeth", status: "MISSED" },
+          { id: 4, title: "Brush teeth", status: "MISSED" },
+          { id: 5, title: "Brush teeth", status: "MISSED" },
+          { id: 6, title: "Brush teeth", status: "MISSED" },
+          { id: 7, title: "Brush teeth", status: "MISSED" },
         ];
 
         const stardata = 3;
         const starArr = Array.from({ length: stardata }, (_, i) => i + 1);
 
-        const withColor = mooddata.map((item) => ({
+        const withColorEmoji = mooddata.map((item) => ({
           ...item,
           color: moodColors[item.mood],
+          emoji: moodemoji[item.mood],
         }));
 
         // await AsyncStorage.setItem(
@@ -71,11 +79,11 @@ export default function AppIndex() {
         //     star: starArr,
         //   })
         // );
-
-        setPastMoods(withColor);
-        setTasks(tasksdata);
-        setStar(starArr);
-        setIsLoading(false)
+        console.log(withColorEmoji)
+        setPastMoods(withColorEmoji);
+        setTasks(tasks);
+        setTodayMood(todayMood);
+        setIsLoading(false);
       } catch (error) {
         console.error("Failed to load data:", error);
       }
@@ -84,17 +92,17 @@ export default function AppIndex() {
     fetchingUserData();
   }, []);
 
-    useEffect(() => {
-      const timer = setTimeout(() => {
-          setminload(true)
-      }, 2000);
-      return () => clearTimeout(timer);
-    }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setminload(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // 2.
   useEffect(() => {
     if (!isLoading && minload) {
-      router.replace("/(app)/taker/home");
+      router.replace("/(app)/(giver)/(giverTabs)/home");
     }
   }, [isLoading, minload, router]);
 
