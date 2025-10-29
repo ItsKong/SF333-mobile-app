@@ -69,7 +69,7 @@ export default function HomePage() {
     });
   };
   const handerMoodtracking = () => {
-    router.push("/(app)/taker/moodTracking");
+    router.push("/(app)/(taker)/moodTracking");
     setIspressed(!ispressed);
     console.log(todayMood);
   };
@@ -204,6 +204,7 @@ export default function HomePage() {
           ))}
         </View>
       </ScrollView>
+      
       <View style={takerStyles.sosContainer}>
         <Pressable
           style={takerStyles.sosButton}
