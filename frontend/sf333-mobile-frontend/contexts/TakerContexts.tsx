@@ -1,6 +1,5 @@
 // SharedContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { Int32 } from "react-native/Libraries/Types/CodegenTypes";
 
 interface TakerContextType {
   date: number;
