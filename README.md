@@ -1,7 +1,8 @@
 added firebase firestore
 api keys will be listed here.
 
-**_ HOW TO USE BACKEND SERVER _**
+** HOW TO USE BACKEND SERVER **
+
 1.Get you own Firebase Firestore project or send your email to 'Mon' naja
 
 2.Download your Firebase service account key or ask for the key from 'Mon' naja
