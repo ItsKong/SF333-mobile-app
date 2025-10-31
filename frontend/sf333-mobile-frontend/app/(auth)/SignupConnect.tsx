@@ -42,7 +42,6 @@ export default function SignupConnect() {
           {isSupervisor ? "Supervisee" : "Supervisor"}
         </Text>
       </Text>
-
       {isSupervisor ? (
         <>
           <TextInput style={loginStyles.formInput} placeholder="connect code" />
@@ -79,4 +78,3 @@ export default function SignupConnect() {
     </Animated.View>
   );
 }
-
