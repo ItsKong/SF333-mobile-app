@@ -3,6 +3,9 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import useDatePicker from "@/hooks/useDatePicker";
+import { iosDatePicker } from "@/styles/iosDatePicker";
+import useTimePicker from "@/hooks/useTimePicker";
 
 interface TaskParams {
   id: string;
@@ -10,38 +13,50 @@ interface TaskParams {
   date: string;
   time: string;
   description?: string; // description is optional
+  pageState: string;
 }
-
 
 export default function EditmodifyTaskTask() {
   const router = useRouter();
   const params = useLocalSearchParams() as unknown as Partial<TaskParams>;
-  const [id , setId] = useState(0);
-  const [task, setTask] = useState('');
-  const [taskDate, setTaskDate] = useState('');
-  const [taskTime, setTaskTime] = useState('');
-  const [taskDescription, setTaskDescription] = useState('');
+  const [id, setId] = useState("");
+  const [paramTime, setParamTime] = useState("");
+  const [paramDate, setParamDate] = useState("");
+  const [paramtask, setparamTask] = useState("");
+  const [paramtaskDescription, setparamTaskDescription] = useState("");
+  const [task, setTask] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [pageState, setPageState] = useState("");
+
+  const {
+    dateOfBirth,
+    toggleDatepicker,
+    renderDatePicker,
+    setDateOfBirth,
+  } = useDatePicker();
+  const {
+    selectedTime,
+    toggleTimepicker,
+    renderTimePicker,
+  } = useTimePicker();
+
   useFocusEffect(
     useCallback(() => {
-      const { id, name, date, time, description } = params;
-      if(id) setId(id);
-      if (name) setTask(name);
-      if (date) setTaskDate(date);
-      if (time) setTaskTime(time);
-      setTaskDescription((description as string) || "");
-      return () => null
-    },[params])
-  )
+      const { id, name, date, time, description, pageState } = params;
+      setPageState(pageState as any);
+      if (id) setId(id);
+      if (name) setparamTask(name);
+      if (date) setParamDate(date);
+      if (time) setParamTime(time)
+      setparamTaskDescription((description as string) || "");
+      return () => null;
+    }, [params])
+  );
 
   const handleSave = () => {
     // TODO: update tasks in global state /storage
-    console.log("Saving task:", {
-      id,
-      task,
-      taskDate,
-      taskTime,
-      taskDescription,
-    });
+    // 1.update local first for UI update
+    // 2.synce to server
     router.back();
   };
 
@@ -49,7 +64,7 @@ export default function EditmodifyTaskTask() {
     <LinearGradient colors={["#f8fafc", "#f1f5f9"]} style={styles.container}>
       {/* Back Button for Home Screen */}
       <View style={styles.backButton}>
-        <Pressable onPress={() => router.replace('/tasks')}>
+        <Pressable onPress={() => router.replace("/tasks")}>
           <MaterialCommunityIcons
             name="arrow-left-circle"
             size={43}
@@ -57,47 +72,37 @@ export default function EditmodifyTaskTask() {
           />
         </Pressable>
       </View>
-
       <View style={styles.headerContainer}>
-        <Text style={styles.header}>EDIT TASK</Text>
+        <Text style={styles.header}>{pageState === 'add'? 'ADD TASK': 'EDIT TASK'}</Text>
       </View>
-
       <View style={styles.card}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Task name</Text>
-          <TextInput style={styles.input} value={task} onChangeText={setTask} />
+          <TextInput style={styles.input} value={task ? task : paramtask} onChangeText={setTask} />
         </View>
-
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Date</Text>
-          <TextInput
-            style={styles.input}
-            value={taskDate}
-            onChangeText={setTaskDate}
-          />
+          <Pressable onPress={toggleDatepicker}>
+            <Text style={[styles.input]}>{dateOfBirth ? dateOfBirth : paramDate}</Text>
+          </Pressable>
         </View>
-
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Time</Text>
-          <TextInput
-            style={styles.input}
-            value={taskTime}
-            onChangeText={setTaskTime}
-          />
+          <Pressable onPress={toggleTimepicker}>
+            <Text style={[styles.input]}>{selectedTime ? selectedTime : paramTime}</Text>
+          </Pressable>
         </View>
-
         {/* New Description Input */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Description</Text>
           <TextInput
             style={[styles.input, { height: 80, textAlignVertical: "top" }]}
-            value={taskDescription}
+            value={taskDescription ? taskDescription : paramtaskDescription}
             onChangeText={setTaskDescription}
             placeholder="Enter task details..."
             multiline
           />
         </View>
-
         <Pressable onPress={handleSave} style={styles.saveBtnWrapper}>
           <LinearGradient
             colors={["#5E6CA8", "#5463a8ff"]}
@@ -106,6 +111,8 @@ export default function EditmodifyTaskTask() {
             <Text style={styles.saveBtnText}>SAVE TASK</Text>
           </LinearGradient>
         </Pressable>
+      {renderDatePicker()}
+      {renderTimePicker()}
       </View>
     </LinearGradient>
   );

@@ -1,22 +1,37 @@
 // app/giver/CareGiverHome.tsx
 
 import { useGiver } from "@/contexts/GiverContexts";
-import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function GiverHome() {
   const router = useRouter();
-  const {pastMoods, tasks, todayMood} = useGiver();
+  const {pastMoods, tasks, todayMood, setTasks, setPastMoods, setTodayMood, STORAGE_KEY} = useGiver();
 
-  // const todayMood = "😕"; // mood วันนี้
-  // const pastMoods = ["🙂", "😀", "😐", "😴", "🙂", "😀", "😕"]; // mood 7 วัน
-
-  // const tasks = [
-  //   { id: 1, title: "Take a shower", status: "DONE" },
-  //   { id: 2, title: "Have a lunch", status: "DONE" },
-  //   { id: 3, title: "Brush teeth", status: "MISSED" },
-  //   { id: 4, title: "Brush teeth", status: "MISSED" },
-  // ];
+  useFocusEffect(
+    useCallback(() => {
+      const fetchingData = async () => {
+        try{
+          const data = await AsyncStorage.getItem(STORAGE_KEY);
+          console.log(data)
+          // if(data) {
+          //   const parseData = JSON.parse(data);
+          //   console.log(parseData.pastmoods)
+          //   setTasks(parseData.tasks)
+          //   setPastMoods(parseData.pastmoods)
+          //   setTodayMood(parseData.todayMood)
+          //   return
+          // }
+        } catch (error) {
+          console.log('Error loading data: ', error);
+        }
+      }
+      fetchingData()
+      return () => null;
+    },[])
+  )
 
 
 
