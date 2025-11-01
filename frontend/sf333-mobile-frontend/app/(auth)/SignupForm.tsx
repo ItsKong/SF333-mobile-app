@@ -142,89 +142,112 @@ export default function SignupForm() {
   };
 
   const handleConfirm = () => {
-    const formData = userRole === "caregiver"
-      ? {
-          username: name,
-          password,
-          gender,
-          birth_date: dateOfBirth,
-          phone_number: phone,
-          emergency_contact: emergency,
-          diagnosis,
-          user_role: "caregiver",
-        }
-      : {
-          username: name,
-          password,
-          gender,
-          birth_date: dateOfBirth,
-          phone_number: phone,
-          user_role: "caretaker",
-        };
-
-    const apiUrl =
+    console.log(process.env.EXPO_PUBLIC_API_URL as string);
+    const formData =
       userRole === "caregiver"
-        ? "http://192.168.1.3:3000/disability"
-        : "http://192.168.1.3:3000/disability";
+        ? {
+            username: name,
+            password,
+            gender,
+            birth_date: dateOfBirth,
+            phone_number: phone,
+            emergency_contact: emergency,
+            diagnosis,
+            user_role: "caregiver",
+          }
+        : {
+            username: name,
+            password,
+            gender,
+            birth_date: dateOfBirth,
+            phone_number: phone,
+            user_role: "caretaker",
+          };
+    const requiredFields = Object.entries(formData);
+    let missingFields = [];
 
-    Alert.alert(
-      "Confirm Information",
-      "Please confirm your information.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: async () => {
-            try {
-              // 1️⃣ Create user
-              const createResp = await fetch(apiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-              });
-              const createResult = await createResp.json();
+    for (const [key, value] of requiredFields) {
+      if (!value && key !== "user_role") {
+        const readableKey = key
+          .split("_")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+        missingFields.push(readableKey);
+      }
+    }
+    console.log(missingFields)
+    if (missingFields.length > 0) {
+      const missingFieldsString = missingFields.join(", ");
+      const alertMessage = `Please fill out the following required fields: ${missingFieldsString}.`;
+      alert(alertMessage);
+    } else {
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL as string;
+        // userRole === "caregiver"
+        //   ? "http://192.168.1.3:3000/disability"
+        //   : "http://192.168.1.3:3000/disability";
 
-              if (!createResp.ok) {
-                Alert.alert("Error", createResult.error || "Signup failed");
-                return;
-              }
-
-              console.log("User created:", createResult);
-
-              // 2️⃣ Fetch the user by username to get the ID
-              const usernameResp = await fetch(
-                `http://192.168.1.3:3000/disability/username/${formData.username}`
-              );
-              const usernameData = await usernameResp.json();
-
-              if (usernameResp.ok && usernameData.length > 0) {
-                const docId = usernameData[0].id;
-                console.log("Firestore document ID:", docId);
-
-                // 3️⃣ Save it in state or localStorage for next screen
-                // Example: router.push and pass params
-                router.push({
-                  pathname: "/(auth)/SignupConnect",
-                  params: { docId: createResult.id  },
-                });
-              } else {
-                console.log("User not found after signup", usernameData);
-              }
-            } catch (error) {
-              console.error("Error:", error);
-              Alert.alert(
-                "Error",
-                "Something went wrong. Please try again later."
-              );
-            }
+      Alert.alert(
+        "Confirm Information",
+        "Please confirm your information.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
           },
-        },
-      ],
-      { cancelable: false }
-    );
+          {
+            text: "OK",
+            onPress: async () => {
+              try {
+                // 1️⃣ Create user
+                const createResp = await fetch(
+                  process.env.EXPO_PUBLIC_POST_USERDATA as string,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(formData),
+                  }
+                );
+                const createResult = await createResp.json();
+
+                if (!createResp.ok) {
+                  Alert.alert("Error", createResult.error || "Signup failed");
+                  return;
+                }
+
+                console.log("User created:", createResult);
+
+                // 2️⃣ Fetch the user by username to get the ID
+                const usernameResp = await fetch(
+                  `${process.env.EXPO_PUBLIC_GET_USERNAME}/${formData.username}`
+                );
+                const usernameData = await usernameResp.json();
+
+                if (usernameResp.ok && usernameData.length > 0) {
+                  const docId = usernameData[0].id;
+                  console.log("Firestore document ID:", docId);
+
+                  // 3️⃣ Save it in state or localStorage for next screen
+                  // Example: router.push and pass params
+                  router.push({
+                    pathname: "/(auth)/SignupConnect",
+                    params: { docId: createResult.id },
+                  });
+                } else {
+                  console.log("User not found after signup", usernameData);
+                }
+              } catch (error) {
+                console.error("Error:", error);
+                Alert.alert(
+                  "Error",
+                  "Something went wrong. Please try again later."
+                );
+              }
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    };
   };
 
   return (

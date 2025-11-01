@@ -9,11 +9,15 @@ interface MoodItem {
 }
 
 interface TaskItem {
-  id: number;
+  id: string;
   title: string;
-  time?: string;
+  due_time: string;
+  date?: string;
   status?: string;
+  created_by?: string;
+  assigned_to?: string;
   describtion?: string;
+  frequency?: "everyday" | "weekly";
 }
 
 interface GiverContextType {
@@ -23,6 +27,7 @@ interface GiverContextType {
   setPastMoods: (value: MoodItem[]) => void;
   tasks: TaskItem[];
   setTasks: (value: TaskItem[]) => void;
+  STORAGE_KEY: string;
 }
 
 const GiverContext = createContext<GiverContextType | undefined>(undefined);
@@ -35,10 +40,11 @@ export const GiverProvider = ({ children }: { children: ReactNode }) => {
     date: 0,
     mood: "happy",
   });
+  const STORAGE_KEY = "@care_giver";
 
   return (
     <GiverContext.Provider
-      value={{ pastMoods, setPastMoods, tasks, setTasks, todayMood, setTodayMood }}
+      value={{ pastMoods, setPastMoods, tasks, setTasks, todayMood, setTodayMood, STORAGE_KEY}}
     >
       {children}
     </GiverContext.Provider>
