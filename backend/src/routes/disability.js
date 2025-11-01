@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt");
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
-// POST /users
+// POST /users - Create a new user
 router.post("/", async (req, res) => {
   try {
     const {
@@ -19,21 +21,30 @@ router.post("/", async (req, res) => {
 
     // ✅ Required fields
     if (!username || !password) {
-      return res.status(400).json({ error: "username and password are required" });
+      return res.status(400).json({ 
+        success: false,
+        error: "username and password are required" 
+      });
     }
 
     // ✅ Validate role
     const allowedRoles = ["caregiver", "caretaker"];
     const role = allowedRoles.includes(user_role) ? user_role : "caretaker";
 
+    // ✅ Hash password before storing
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 = salt rounds
+
+    // ✅ Create user document with FIXED values for stars_point and linked_to
     const docRef = await db.collection("users").add({
       username,
-      password,
-      gender,
-      birth_date,
-      phone_number,
+      password: hashedPassword, // store hashed password
+      gender: gender || null,
+      birth_date: birth_date || null,
+      phone_number: phone_number || null,
       emergency_contact: emergency_contact || null,
       diagnosis: diagnosis || null,
+      stars_point: 0,        
+      linked_to: null,       
       user_role: role,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
@@ -42,13 +53,111 @@ router.post("/", async (req, res) => {
       success: true,
       id: docRef.id,
       user_role: role,
+      message: "User created successfully"
     });
+
   } catch (error) {
     console.error("Error creating user:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 });
 
+// PUT /disablity/:id/link - Link user to another user (update linked_to)
+router.put("/:id/link", async (req, res) => {
+  try {
+    const { linked_to } = req.body;
+
+    if (!linked_to) {
+      return res.status(400).json({
+        success: false,
+        error: "linked_to user_id is required"
+      });
+    }
+
+    // Verify the linked user exists
+    const linkedUserDoc = await db.collection("users").doc(linked_to).get();
+    if (!linkedUserDoc.exists) {
+      return res.status(404).json({
+        success: false,
+        error: "Linked user not found"
+      });
+    }
+
+    // Update the user's linked_to field
+    await db.collection("users").doc(req.params.id).update({
+      linked_to: linked_to,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User linked successfully"
+    });
+
+  } catch (error) {
+    console.error("Error linking user:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// PUT /disability/:id/unlink - Unlink user (set linked_to back to null)
+router.put("/:id/unlink", async (req, res) => {
+  try {
+    await db.collection("users").doc(req.params.id).update({
+      linked_to: null,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User unlinked successfully"
+    });
+
+  } catch (error) {
+    console.error("Error unlinking user:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// PUT /disability/:id/stars - Update stars_point WITH "NUMBER"
+router.put("/:id/stars", async (req, res) => {
+  try {
+    const { stars_point } = req.body;
+
+    if (typeof stars_point !== "number") {
+      return res.status(400).json({
+        success: false,
+        error: "stars_point must be a number"
+      });
+    }
+
+    await db.collection("users").doc(req.params.id).update({
+      stars_point: stars_point,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Stars point updated successfully"
+    });
+
+  } catch (error) {
+    console.error("Error updating stars:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 
 // GET /users - get all users
 router.get("/", async (req, res) => {

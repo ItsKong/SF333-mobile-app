@@ -16,19 +16,27 @@ const db = admin.firestore();
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint (important for Render)
 // app.get('/', (req, res) => {
 //   res.json({ status: 'Server is running' });
 // });
 
+
 const testRoutes = require('./src/routes/test');
 const disabilityRoutes = require('./src/routes/disability');
+const authRoutes = require('./src/routes/auth');
+const taskRoutes = require('./src/routes/task')
+const moodRoutes = require('./src/routes/mood')
 
 
 // Your API endpoints
 app.use('/', testRoutes);
 app.use('/disability', disabilityRoutes);
+app.use('/auth', authRoutes)
+app.use('/task', taskRoutes)
+app.use('/mood', moodRoutes)
 
 
 // ----user api call----
