@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthProvider";
 
 // THIS LOAD USER DATA
 // IF NOT FOUND => LOGIN
@@ -9,31 +10,26 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function AppIndex() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [minload, setminload] = useState(false);
+  const { USER_DATA_KEY, setUserRole } = useAuth();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userDatacache = await AsyncStorage.getItem("user");
+        const userDatacache = await AsyncStorage.getItem(USER_DATA_KEY);
         if (userDatacache) {
-          // const userString = await AsyncStorage.getItem('user');
-          // const user = userString ? JSON.parse(userString) : null;
-          console.log("Loaded from cache");
-          // router.replace('/(app)')
-          setIsLoading(false);
+          const user = await JSON.parse(userDatacache);
+          console.log("Loaded from cache: ", user.userData);
+          setUserRole(user.userRole)
+          router.replace("/(app)");
           return;
+        } else {
+          // No cache, go log in page
+          console.log("No user in storage.");
         }
-
-        // No cache, Fetching
-        console.log("Fetching fresh data");
-        // const userData = await fetch('api');
-        // if (userData) {
-        // store in aynceStorage
-        // await AsyncStorage.setItem('user', JSON.stringify({ username: 'John', userRole: 'caretaker' }));
-        // }
-        // router.replace('/(app)')
-        setIsLoading(false);
       } catch (error) {
         console.log("User fetching Error: ", error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -43,11 +39,17 @@ export default function AppIndex() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/(auth)/LoginForm");
+      setminload(true);
     }, 2000);
-
     return () => clearTimeout(timer);
-  }, [isLoading]);
+  }, []);
+
+  // 2.
+  useEffect(() => {
+    if (!isLoading && minload) {
+      router.replace("/(auth)/LoginForm");
+    }
+  }, [isLoading, minload, router]);
 
   return (
     <View style={styles.container}>
