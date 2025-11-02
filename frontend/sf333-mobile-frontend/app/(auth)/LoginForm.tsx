@@ -5,13 +5,14 @@ import { useLoginLayout } from "@/contexts/LoginLayoutProvider";
 import { useRouter } from "expo-router";
 import { Alert } from "react-native";
 import { useAuth } from "@/contexts/AuthProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const { setShowBackButton } = useLoginLayout();
-  const { setUserRole } = useAuth();
+  const { setUserRole, USER_DATA_KEY } = useAuth();
 
   const handleLogin = async (state: string) => {
     if (state === "confirm") {
@@ -19,23 +20,41 @@ export default function LoginForm() {
       if (!name || !password) {
         Alert.alert("Username or password missing.", "Please enter username and password");
       } else {
+        const formdata = {username: name, password: password}
+        console.log(formdata)
         try {
           const usernameResp = await fetch(
-            `${process.env.EXPO_PUBLIC_GET_USERNAME}/${name}`
+            process.env.EXPO_PUBLIC_POST_LOGIN as string,
+            {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify(formdata),
+            }
           );
-          const usernameData = await usernameResp.json();
 
-          if (usernameResp.ok && usernameData.length > 0) {
-            const docId = usernameData[0].id;
+          const usernameData = await usernameResp.json();
+          console.log("usernameData",usernameData.user)
+
+          if (usernameResp.ok) {
+            const docId = usernameData.token;
             console.log("Firestore document ID:", docId);
-            console.log("usernameData", usernameData[0].user_role)
-            setUserRole(usernameData[0].user_role)
+            console.log("usernameData", usernameData.user)
+
+            await AsyncStorage.setItem(
+              USER_DATA_KEY,
+              JSON.stringify({
+                userData: usernameData.user,
+                userRole: usernameData.user.user_role,
+              })
+            );
+
+            setUserRole(usernameData.user.user_role)
             router.replace('/(app)')
 
             // 3️⃣ Save it in state or localStorage for next screen
             // Example: router.push and pass params
           } else {
-            console.log("User not found after signup", usernameData);
+            console.log("Login error: ", usernameData);
           }
         } catch (error) {
           console.error("Error:", error);

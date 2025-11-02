@@ -45,13 +45,15 @@ export default function AppIndex() {
       try {
         const storedData = await AsyncStorage.getItem(STORAGE_KEY);
         // fetching local is not สบาย for testing so skipy skipy
-        if (!storedData) {
+        if (storedData) {
           // Parse and use stored data
+          console.log("Giver loading fix data from storage:");
           // const parsed = JSON.parse(storedData);
           // setPastMoods(parsed.pastmoods || []);
           // setTasks(parsed.tasks || []);
           // setTodayMood(parsed.todayMood || null);
         } else {
+          console.log("Giver loading fix data:");
           const todayMood = {
             mood: "angry",
             date: 0,
