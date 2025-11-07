@@ -146,6 +146,45 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
+// GET /moods/today/user/:userId - Get all today mood records
+router.get("/today/user/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId; // Firestore document ID
+    const { date, limit, start_date, end_date } = req.query; // ✅ Added `date`
+
+    let query = db.collection("moods")
+      .where("record_by", "==", userId)
+      .orderBy("record_time", "desc");
+
+    const today = new Date().toISOString().split("T")[0];
+    const startOfDay = new Date(`${today}T00:00:00.000Z`);
+    const endOfDay = new Date(`${today}T23:59:59.999Z`);
+    query = query
+      .where("record_time", ">=", startOfDay.toISOString())
+      .where("record_time", "<=", endOfDay.toISOString());
+
+    const snapshot = await query.get();
+
+    const moods = [];
+    snapshot.forEach(doc => {
+      moods.push({ id: doc.id, ...doc.data() });
+    });
+
+    res.status(200).json({
+      success: true,
+      count: moods.length,
+      moods
+    });
+
+  } catch (error) {
+    console.error("Error fetching moods:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch moods"
+    });
+  }
+});
+
 // GET /moods - Get all mood records
 router.get("/", async (req, res) => {
   try {

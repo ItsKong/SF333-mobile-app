@@ -29,6 +29,7 @@ const disabilityRoutes = require('./src/routes/disability');
 const authRoutes = require('./src/routes/auth');
 const taskRoutes = require('./src/routes/task')
 const moodRoutes = require('./src/routes/mood')
+const sosRoutes = require('./src/routes/sos')
 
 
 // Your API endpoints
@@ -37,6 +38,7 @@ app.use('/disability', disabilityRoutes);
 app.use('/auth', authRoutes)
 app.use('/task', taskRoutes)
 app.use('/mood', moodRoutes)
+app.use('/sos', sosRoutes)
 
 
 // ----user api call----
