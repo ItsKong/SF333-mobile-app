@@ -27,6 +27,19 @@ router.post("/", async (req, res) => {
       });
     }
 
+    const existingUser = await db
+      .collection("users")
+      .where("username", "==", username)
+      .limit(1)
+      .get();
+
+    if (!existingUser.empty) {
+      return res.status(400).json({
+        success: false,
+        error: "Username already exists.",
+      });
+    }
+
     // ✅ Validate role
     const allowedRoles = ["caregiver", "caretaker"];
     const role = allowedRoles.includes(user_role) ? user_role : "caretaker";
