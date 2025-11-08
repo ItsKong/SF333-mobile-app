@@ -21,27 +21,6 @@ const StatsCard = ({ title, value }: { title: string; value: string }) => (
   </View>
 );
 
-// Mock MoodIndicator Component
-const MoodIndicator = ({ mood }: { mood: "happy" | "angry" | "sad" }) => {
-  const emoji = mood === "happy" ? "😀" : mood === "angry" ? "😡" : "😢";
-  return (
-    <View style={styles.moodIndicator}>
-      <Text style={styles.moodEmoji}>{emoji}</Text>
-    </View>
-  );
-};
-
-interface TaskHistoryItem {
-  task: string;
-  date: string;
-  status: "y" | "n";
-}
-
-interface MoodHistoryItem {
-  mood: "happy" | "angry" | "sad";
-  date: string;
-}
-
 export default function Dashboard() {
   const router = useRouter();
   const { pastMoods, tasks, STORAGE_KEY, setPastMoods, setTasks } = useGiver();
@@ -127,7 +106,7 @@ export default function Dashboard() {
         {tasks.map((item, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.taskText, { flex: 2 }]}>{item.title}</Text>
-            <Text style={[styles.dateText, { flex: 1 }]}>{item.date}</Text>
+            <Text style={[styles.dateText, { flex: 1 }]}>{item.due_date}</Text>
             <Text
               style={[
                 styles.statusText,
@@ -205,7 +184,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5 },
-  taskText: { fontSize: 14, textAlign: "left", color: "#111827" },
+  taskText: { fontSize: 14, textAlign: "center", color: "#111827" },
   dateText: { fontSize: 14, textAlign: "center", color: "#6B7280" },
   statusText: { fontSize: 14, fontWeight: "600", textAlign: "center" },
   success: { color: "#10B981" },

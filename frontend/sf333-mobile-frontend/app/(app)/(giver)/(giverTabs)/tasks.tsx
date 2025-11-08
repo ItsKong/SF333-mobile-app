@@ -1,34 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { taskStyle } from "@/styles/giverTasks.style";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useGiver } from "@/contexts/GiverContexts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthProvider";
 
-interface TaskParams {
-  id: string;
-  title: string;
-  due_time: string;
-  date: string;
-  frequency: string;
-  description?: string; // description is optional
-  pageState: string;
-  docId: string;
-  linked_id: string;
-}
-
-
 export default function tasks() {
   const router = useRouter();
   const ICON_SIZE = 64; // Match your icon size
-  const { tasks } = useGiver();
+  const { tasks, setTasks, STORAGE_KEY } = useGiver();
   const { USER_DATA_KEY } = useAuth();
   const [docId, setDocId] = useState("");
   const [linked_id, setLinked_id] = useState("");
+  const [refreshing, setRefreshing] = React.useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -36,14 +24,14 @@ export default function tasks() {
         try {
           const userD = await AsyncStorage.getItem(USER_DATA_KEY);
           if (!userD) {
-            router.replace('/(auth)/LoginForm');
+            router.replace("/(auth)/LoginForm");
             AsyncStorage.clear();
             return;
           } else {
-            const parseUser = await JSON.parse(userD)
+            const parseUser = await JSON.parse(userD);
             console.log("Task page:", parseUser.docId);
-            setDocId(parseUser.docId)
-            setLinked_id(parseUser.userData.linked_to)
+            setDocId(parseUser.docId);
+            setLinked_id(parseUser.userData.linked_to);
           }
         } catch (error) {
           console.error("Error reading storage:", error);
@@ -55,21 +43,52 @@ export default function tasks() {
     }, [])
   );
 
+  const onRefresh = React.useCallback(async () => {
+    // fetch server
+    setRefreshing(true);
+    try {
+      const getId = await AsyncStorage.getItem(USER_DATA_KEY);
+      if (!getId) {
+        router.replace("/(auth)/LoginForm");
+        return;
+      }
+      const parseID = JSON.parse(getId);
+      const data = await AsyncStorage.getItem(STORAGE_KEY);
+      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
+      const userTaskreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.docId}`
+      );
+      const userMoodreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.docId}`
+      );
+
+      const userTaskData = await userTaskreq.json();
+      const userMoodData = await userMoodreq.json();
+
+      if (data && userData) {
+        const parseData = JSON.parse(data);
+        setTasks(parseData.tasks);
+        // setStar(parseData.star);
+      }
+    } catch (e) {
+      console.log("Refresh Error: ", e);
+    }
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
   // Delete task
   const handleDeleteTask = (id: string) => {
     null;
   };
 
-  const handleTaskInteract = (pageState: string, item?: TaskParams) => {
+  const handleTaskInteract = (pageState: string, item?: any) => {
     if (item) {
       router.push({
         pathname: "/modifyTask",
         params: {
           id: item.id,
-          title: item.title,
-          date: item.date || "",
-          due_time: item.due_time,
-          frequency: item.frequency,
           pageState: pageState,
           docId: docId,
           linked_id: linked_id,
@@ -88,8 +107,12 @@ export default function tasks() {
   };
 
   return (
-    // <View style={{ flex: 1, position: "relative" }}>
-    <LinearGradient colors={["#f8fafc", "#f1f5f9"]} style={taskStyle.container}>
+    <ScrollView
+      contentContainerStyle={taskStyle.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       {/* Task List */}
       <Text style={taskStyle.header}>ALL TASKS</Text>
       <FlatList
@@ -98,7 +121,7 @@ export default function tasks() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => handleTaskInteract("edit", item as TaskParams)}
+            onPress={() => handleTaskInteract("edit", item as any)}
             style={{ flex: 1 }}
           >
             <View style={taskStyle.taskCard}>
@@ -140,7 +163,6 @@ export default function tasks() {
           <FontAwesome name="plus-circle" size={ICON_SIZE} color="#c6d0fbff" />
         </Pressable>
       </View>
-    </LinearGradient>
-    // </View>
+    </ScrollView>
   );
 }

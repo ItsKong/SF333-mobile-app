@@ -9,17 +9,6 @@ import { useGiver } from "@/contexts/GiverContexts";
 
 // FETCHING DATA IN HERE!
 // SEND USERNAME TO GET USER DATA.
-interface TaskItem {
-  id: string;
-  title: string;
-  due_time: string;
-  date: string;
-  status?: string;
-  created_by?: string;
-  assigned_to?: string;
-  describtion?: string;
-  frequency?: "everyday" | "weekly";
-}
 
 const moodColors: Record<string, string> = {
   happy: "#BCE69B",
@@ -72,25 +61,36 @@ export default function AppIndex() {
 
           const userTaskData = await userTaskreq.json();
           const userMoodData = await userMoodreq.json();
-          console.log("userTask", userTaskData);
-          console.log("userMood", userMoodData);
-          const withColorEmoji = userMoodData.moods.map((item: any) => ({
-            ...item,
-            color: moodColors[item.mood],
-            emoji: moodemoji[item.mood],
-          }));
+          // console.log("userTask", userTaskData);
+          // console.log("userMood", userMoodData);
 
-              await AsyncStorage.setItem(
+          const taskwithIndexNum = userTaskData.tasks.map(
+            (item: any, index: number) => ({
+              ...item,
+              index: index + 1,
+            })
+          );
+
+          const moodwithColorEmojiIndex = userMoodData.moods.map(
+            (item: any, index: number) => ({
+              ...item,
+              color: moodColors[item.mood],
+              emoji: moodemoji[item.mood],
+              index: index + 1,
+            })
+          );
+          console.log("moodwithColorEmojiIndex: ", moodwithColorEmojiIndex);
+          await AsyncStorage.setItem(
             STORAGE_KEY,
             JSON.stringify({
-              pastmoods: withColorEmoji,
-              tasks: userTaskData.tasks,
+              pastmoods: moodwithColorEmojiIndex,
+              tasks: taskwithIndexNum,
               // todayMood: todaymood,
             })
           );
 
-            setPastMoods(withColorEmoji);
-            setTasks(userTaskData.tasks);
+          setPastMoods(moodwithColorEmojiIndex);
+          setTasks(taskwithIndexNum);
           //   setTodayMood(todayMood);
 
           // ================================================================

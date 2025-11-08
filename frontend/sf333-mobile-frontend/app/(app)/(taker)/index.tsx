@@ -7,17 +7,6 @@ import { useTaker } from "@/contexts/TakerContexts";
 
 // FETCHING DATA IN HERE!
 // SEND USERNAME TO GET USER DATA.
-interface TaskItem {
-  id: string;
-  title: string;
-  due_time: string;
-  date: string;
-  status?: string;
-  created_by?: string;
-  assigned_to?: string;
-  describtion?: string;
-  frequency?: "everyday" | "weekly";
-}
 
 const moodColors: Record<string, string> = {
   happy: "#BCE69B",

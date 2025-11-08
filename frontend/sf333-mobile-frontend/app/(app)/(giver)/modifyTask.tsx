@@ -14,14 +14,11 @@ import useDatePicker from "@/hooks/useDatePicker";
 import { iosDatePicker } from "@/styles/iosDatePicker";
 import useTimePicker from "@/hooks/useTimePicker";
 import DropDownPicker from "react-native-dropdown-picker";
+import { useGiver } from "@/contexts/GiverContexts";
+import { TaskItem } from "@/types/data.type";
 
 interface TaskParams {
   id: string;
-  title: string;
-  due_time: string;
-  date: string;
-  frequency: string;
-  description?: string; // description is optional
   pageState: string;
   docId: string;
   linked_id: string;
@@ -30,16 +27,14 @@ interface TaskParams {
 export default function EditmodifyTaskTask() {
   const router = useRouter();
   const params = useLocalSearchParams() as unknown as Partial<TaskParams>;
+  const {tasks} = useGiver();
   const [id, setId] = useState("");
-  const [paramTime, setParamTime] = useState("");
-  const [paramDate, setParamDate] = useState("");
-  const [paramtask, setparamTask] = useState("");
-  const [paramtaskDescription, setparamTaskDescription] = useState("");
   const [task, setTask] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [pageState, setPageState] = useState("");
   const [pardocId, setDocId] = useState("");
   const [parlinked_id, setLinked_id] = useState("");
+  const [matchedTask, setmatchedTask] = useState<TaskItem>();
 
   //dropdown value here!
   const [frequen, setFrequen] = useState(null);
@@ -50,7 +45,7 @@ export default function EditmodifyTaskTask() {
     { label: "Once", value: "Once" },
   ]);
   //===========================
-  const { dateOfBirth, toggleDatepicker, renderDatePicker, setDateOfBirth } =
+  const {date, setDate, formatedDate, toggleDatepicker, renderDatePicker, setFormatedDate } =
     useDatePicker();
   const { selectedTime, toggleTimepicker, renderTimePicker } = useTimePicker();
 
@@ -58,23 +53,17 @@ export default function EditmodifyTaskTask() {
     useCallback(() => {
       const {
         id,
-        title,
-        date,
-        due_time,
-        description,
         pageState,
         docId,
         linked_id,
       } = params;
       setPageState(pageState as any);
       if (id) setId(id);
-      if (title) setparamTask(title);
-      if (date) setParamDate(date);
-      if (due_time) setParamTime(due_time);
       if (docId) setDocId(docId);
       if (linked_id) setLinked_id(linked_id);
-      setparamTaskDescription((description as string) || "");
-      // console.log(docId, linked_id);
+      const getmatch = tasks.find(task => task.id === id);
+      setmatchedTask(getmatch)
+      console.log("Modify page: ", matchedTask);
       return () => null;
     }, [params])
   );
@@ -96,8 +85,8 @@ export default function EditmodifyTaskTask() {
       try {
         const formdata = {
           title: task,
-          content: taskDescription ? taskDescription : paramtaskDescription,
-          due_time: selectedTime ? selectedTime : paramTime,
+          content: taskDescription ,
+          due_time: selectedTime,
           status: "MISSING",
           frequency: frequen,
           created_by: pardocId,
@@ -127,11 +116,13 @@ export default function EditmodifyTaskTask() {
       }
     } else {
       try {
+        // edit => update obj and sync server
         const formdata = {
           title: task,
-          content: taskDescription ? taskDescription : paramtaskDescription,
-          due_time: selectedTime ? selectedTime : paramTime,
-          frequency: frequen,
+          content: taskDescription ? taskDescription : matchedTask?.content,
+          due_time: selectedTime ? selectedTime : matchedTask?.due_time,
+          due_date: formatedDate ? formatedDate : matchedTask?.due_date,
+          frequency: frequen ? frequen: matchedTask?.frequency,
           created_by: pardocId,
           assigned_to: parlinked_id,
         };
@@ -163,7 +154,7 @@ export default function EditmodifyTaskTask() {
           <Text style={styles.label}>Task name</Text>
           <TextInput
             style={styles.input}
-            value={task ? task : paramtask}
+            value={task ? task : matchedTask?.title}
             onChangeText={setTask}
           />
         </View>
@@ -171,7 +162,7 @@ export default function EditmodifyTaskTask() {
           <Text style={styles.label}>Date</Text>
           <Pressable onPress={toggleDatepicker}>
             <Text style={[styles.input]}>
-              {dateOfBirth ? dateOfBirth : paramDate}
+              {formatedDate ? formatedDate: matchedTask?.due_date}
             </Text>
           </Pressable>
         </View>
@@ -179,7 +170,7 @@ export default function EditmodifyTaskTask() {
           <Text style={styles.label}>Time</Text>
           <Pressable onPress={toggleTimepicker}>
             <Text style={[styles.input]}>
-              {selectedTime ? selectedTime : paramTime}
+              {selectedTime ? selectedTime : matchedTask?.due_time}
             </Text>
           </Pressable>
         </View>
@@ -187,7 +178,7 @@ export default function EditmodifyTaskTask() {
           <Text style={styles.label}>Frequency</Text>
           <DropDownPicker
             open={open}
-            value={frequen}
+            value={(frequen ?? matchedTask?.frequency) as string | null}
             items={items}
             setOpen={setOpen}
             setValue={setFrequen}
@@ -202,7 +193,7 @@ export default function EditmodifyTaskTask() {
           <Text style={styles.label}>Description</Text>
           <TextInput
             style={[styles.input, { height: 80, textAlignVertical: "top" }]}
-            value={taskDescription ? taskDescription : paramtaskDescription}
+            value={taskDescription ? taskDescription : matchedTask?.content}
             onChangeText={setTaskDescription}
             placeholder="Enter task details..."
             multiline
