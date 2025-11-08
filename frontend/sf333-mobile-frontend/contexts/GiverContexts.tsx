@@ -1,24 +1,6 @@
 // SharedContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from "react";
-
-interface MoodItem {
-  color?: string;
-  date: number;
-  mood: string;
-  emoji?: string | null;
-}
-
-interface TaskItem {
-  id: string;
-  title: string;
-  due_time: string;
-  date?: string;
-  status?: string;
-  created_by?: string;
-  assigned_to?: string;
-  describtion?: string;
-  frequency?: "everyday" | "weekly";
-}
+import { TaskItem, MoodItem } from "@/types/data.type";
 
 interface GiverContextType {
   todayMood: MoodItem;

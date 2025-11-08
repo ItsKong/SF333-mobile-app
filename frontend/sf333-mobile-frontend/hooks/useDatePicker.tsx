@@ -14,7 +14,7 @@ export default function useDatePicker() {
   // Date picker state (internal to component)
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-  const [dateOfBirth, setDateOfBirth] = useState(null);
+  const [formatedDate, setFormatedDate] = useState(null);
 
   const toggleDatepicker = () => {
     setShowPicker(!showPicker);
@@ -36,7 +36,7 @@ export default function useDatePicker() {
         month: "short",
         year: "numeric",
       });
-      setDateOfBirth(formattedDate as any);
+      setFormatedDate(formattedDate as any);
       // Close picker on iOS after selection
       if (Platform.OS === "ios") {
         setShowPicker(false);
@@ -52,7 +52,7 @@ export default function useDatePicker() {
       month: "short",
       year: "numeric",
     });
-    setDateOfBirth(formattedDate as any);
+    setFormatedDate(formattedDate as any);
     setShowPicker(false);
   };
 
@@ -103,12 +103,14 @@ export default function useDatePicker() {
   };
 
   return {
-    dateOfBirth,
+    formatedDate,
     showPicker,
+    date,
+    setDate,
     toggleDatepicker,
     onChange,
     confirmIOSDate,
     renderDatePicker,
-    setDateOfBirth,
+    setFormatedDate,
   };
 }

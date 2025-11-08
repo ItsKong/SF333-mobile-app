@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { useGiver } from "@/contexts/GiverContexts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -17,6 +17,7 @@ import {
 export default function GiverHome() {
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [username, setUsername] = useState("");
   const {
     pastMoods,
     tasks,
@@ -26,7 +27,25 @@ export default function GiverHome() {
     setTodayMood,
     STORAGE_KEY,
   } = useGiver();
-  const {USER_DATA_KEY} = useAuth()
+  const { USER_DATA_KEY } = useAuth();
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetctUsername = async () => {
+        const storeData = await AsyncStorage.getItem(USER_DATA_KEY);
+        if (!storeData) {
+          router.replace("/(auth)/LoginForm");
+          AsyncStorage.clear();
+          return;
+        } else {
+          const parseusername = await JSON.parse(storeData);
+          console.log("Username: ", parseusername.userData.username);
+          setUsername(parseusername.userData.username);
+        }
+      };
+      fetctUsername();
+    }, [])
+  );
 
   const onRefresh = React.useCallback(async () => {
     // fetch server
@@ -35,6 +54,7 @@ export default function GiverHome() {
       const getId = await AsyncStorage.getItem(USER_DATA_KEY);
       if (!getId) {
         router.replace("/(auth)/LoginForm");
+        AsyncStorage.clear();
         return;
       }
       const parseID = JSON.parse(getId);
@@ -73,14 +93,16 @@ export default function GiverHome() {
         }
       >
         {/* Today's Mood */}
-        <Text style={styles.header}>Poom’s today Mood</Text>
+        <Text style={styles.header}>{username}’s today Mood</Text>
         <Text style={styles.moodEmoji}>{todayMood.emoji}</Text>
 
         {/* Mood History */}
-        <Text style={styles.subHeader}>Poom’s mood in past 7 days:</Text>
+        <Text style={styles.subHeader}>
+          {username}'s mood in past 7 days:
+        </Text>
         <View style={styles.moodRow}>
-          {pastMoods.map((item) => (
-            <Text key={item.date} style={styles.moodHistory}>
+          {pastMoods.map((item, index) => (
+            <Text key={index} style={styles.moodHistory}>
               {item.emoji}
             </Text>
           ))}
@@ -89,8 +111,8 @@ export default function GiverHome() {
         {/* Task status */}
         <Text style={styles.subHeader}>Today's tasks status</Text>
         <View style={styles.taskContainer}>
-          {tasks.map((task) => (
-            <View key={task.id} style={styles.taskCard}>
+          {tasks.map((task, index) => (
+            <View key={index} style={styles.taskCard}>
               <Text style={styles.taskTitle}>{task.title}</Text>
               <Text
                 style={[
