@@ -6,6 +6,11 @@ import { useRouter } from "expo-router";
 import { Alert } from "react-native";
 import { useAuth } from "@/contexts/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode, JwtPayload } from "jwt-decode";
+
+interface CustomJwtPayload extends JwtPayload {
+  userId: string;
+}
 
 export default function LoginForm() {
   const router = useRouter();
@@ -18,43 +23,49 @@ export default function LoginForm() {
     if (state === "confirm") {
       console.log("confirm");
       if (!name || !password) {
-        Alert.alert("Username or password missing.", "Please enter username and password");
+        Alert.alert(
+          "Username or password missing.",
+          "Please enter username and password"
+        );
       } else {
-        const formdata = {username: name, password: password}
-        console.log(formdata)
+        const formdata = { username: name, password: password };
+        console.log(formdata);
         try {
           const usernameResp = await fetch(
             process.env.EXPO_PUBLIC_POST_LOGIN as string,
             {
               method: "POST",
-              headers: {"Content-Type": "application/json"},
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify(formdata),
             }
           );
 
           const usernameData = await usernameResp.json();
-          console.log("usernameData",usernameData.user)
+          console.log("usernameData", usernameData.user);
 
           if (usernameResp.ok) {
             const docId = usernameData.token;
-            console.log("Firestore document ID:", docId);
-            console.log("usernameData", usernameData.user)
+            const decoded = jwtDecode<CustomJwtPayload>(docId);
+            console.log("Firestore document ID:", decoded.userId);
+            console.log("usernameData", usernameData.user);
 
             await AsyncStorage.setItem(
               USER_DATA_KEY,
               JSON.stringify({
                 userData: usernameData.user,
+                docId: decoded.userId,
                 userRole: usernameData.user.user_role,
               })
             );
 
-            setUserRole(usernameData.user.user_role)
-            router.replace('/(app)')
+            setUserRole(usernameData.user.user_role);
+            router.replace("/(app)");
 
             // 3️⃣ Save it in state or localStorage for next screen
             // Example: router.push and pass params
           } else {
             console.log("Login error: ", usernameData);
+            Alert.alert("Error", "Username or password incorrect.");
           }
         } catch (error) {
           console.error("Error:", error);

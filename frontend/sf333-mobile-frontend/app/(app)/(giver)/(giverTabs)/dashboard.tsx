@@ -1,7 +1,9 @@
 import React, { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useGiver } from "@/contexts/GiverContexts";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthProvider";
 
 // Mock StatsCard Component
 const StatsCard = ({ title, value }: { title: string; value: string }) => (
@@ -41,31 +43,76 @@ interface MoodHistoryItem {
 }
 
 export default function Dashboard() {
-  const {pastMoods, tasks} = useGiver();
+  const router = useRouter();
+  const { pastMoods, tasks, STORAGE_KEY, setPastMoods, setTasks } = useGiver();
+  const { USER_DATA_KEY } = useAuth();
   const [percent, setPercent] = useState(0);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    // fetch server
+    setRefreshing(true);
+    try {
+      const getId = await AsyncStorage.getItem(USER_DATA_KEY);
+      if (!getId) {
+        router.replace("/(auth)/LoginForm");
+        return;
+      }
+      const parseID = JSON.parse(getId);
+      const data = await AsyncStorage.getItem(STORAGE_KEY);
+      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
+      const userTaskreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.docId}`
+      );
+      const userMoodreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.docId}`
+      );
+
+      const userTaskData = await userTaskreq.json();
+      const userMoodData = await userMoodreq.json();
+
+      if (data && userData) {
+        const parseData = JSON.parse(data);
+        setPastMoods(parseData.pastmoods);
+        setTasks(parseData.tasks);
+        // setStar(parseData.star);
+      }
+    } catch (e) {
+      console.log("Refresh Error: ", e);
+    }
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      percentageCal()
+      percentageCal();
       return () => null;
-    },[])
-  )
+    }, [])
+  );
 
   const percentageCal = () => {
-    let done =  0
-    let count = 0
-    for(let i of tasks){
-      if(i.status === "DONE") {
+    let done = 0;
+    let count = 0;
+    for (let i of tasks) {
+      if (i.status === "DONE") {
         done++;
       }
       count++;
     }
-    setPercent((done/count)*100)
-  }
+    setPercent((done / count) * 100);
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       {/* Stats Overview */}
-      <StatsCard title="Percentage of completed tasks" value={percent+'%'} />
+      <StatsCard title="Percentage of completed tasks" value={percent + "%"} />
 
       {/* Weekly Task History */}
       <Text style={styles.cardTitle}>Weekly Task History</Text>
@@ -107,7 +154,7 @@ export default function Dashboard() {
           <View key={index} style={styles.tableRow}>
             {/* <MoodIndicator mood={item.mood} /> */}
             <View style={styles.moodIndicator}>
-            <Text style={styles.moodEmoji}>{item.emoji}</Text>
+              <Text style={styles.moodEmoji}>{item.emoji}</Text>
             </View>
             <Text style={[styles.dateText, { flex: 1 }]}>{item.date}</Text>
           </View>
@@ -157,7 +204,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     textAlign: "center",
   },
-  tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5},
+  tableRow: { flexDirection: "row", alignItems: "center", paddingVertical: 5 },
   taskText: { fontSize: 14, textAlign: "left", color: "#111827" },
   dateText: { fontSize: 14, textAlign: "center", color: "#6B7280" },
   statusText: { fontSize: 14, fontWeight: "600", textAlign: "center" },

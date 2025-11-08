@@ -1,9 +1,18 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { takerStyles } from "@/styles/taker.style";
 import { useTaker } from "@/contexts/TakerContexts";
-// import { useTaker } from "@/hooks/useTaker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthProvider";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 interface MoodItem {
   color: string;
@@ -11,11 +20,16 @@ interface MoodItem {
   mood: string;
   emoji?: string | null;
 }
-
 interface TaskItem {
-  id: number;
+  id: string;
   title: string;
-  time: string;
+  due_time: string;
+  date?: string;
+  status?: string;
+  created_by?: string;
+  assigned_to?: string;
+  describtion?: string;
+  frequency?: "everyday" | "weekly";
 }
 
 const moodColors: Record<string, string> = {
@@ -33,40 +47,102 @@ const moodemoji: Record<string, string> = {
 
 export default function HomePage() {
   const router = useRouter();
-  const { mood, date, isButtonPress, pastmoods, star, tasks, setStar } = useTaker();
-  // const { pastmoods, star, tasks} = useTaker();
+  const {
+    mood,
+    setMood,
+    date,
+    setDate,
+    isButtonPress,
+    setIsButtonPress,
+    pastmoods,
+    setPastMoods,
+    star,
+    setStar,
+    tasks,
+    setTasks,
+    TAKER_STORAGE_KEY,
+  } = useTaker();
+  const { USER_DATA_KEY } = useAuth();
+  const [username, setUsername] = useState("");
   const [ispressed, setIspressed] = useState(false);
   const [isTaskPressed, setisTaskPressed] = useState(false);
   const [isdoing, setIsdoing] = useState<boolean>(false);
-  // const [pastmoods, setPastMoods] = useState<MoodItem[]>([]);
-  // const [star, setStar] = useState<number[]>([]);
-  // const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [refreshing, setRefreshing] = React.useState(false);
   const [todayMood, setTodayMood] = useState<MoodItem>({
     color: "#BCE69B",
     date: 0,
     mood: "neutral",
   });
 
-  //Build today mood useFocusEffect(
-  useFocusEffect(
-    useCallback(() => {
-      setTodayMood({
-        color: moodColors[mood],
-        date: date,
-        mood: mood,
-        emoji: moodemoji[mood],
-      });
-      return () => null;
-    }, [mood, date])
-  );
+  const handleLogout = async () => {
+    try {
+      Alert.alert("Logout", "Are you sure you want to logout?", [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            // Add your logout logic here
+            console.log("User logged out");
+            await AsyncStorage.clear();
+            router.replace("/(auth)/LoginForm");
+            // Example: clear auth tokens, navigate to login, etc.
+          },
+        },
+      ]);
+    } catch (error) {
+      console.log("Error logout: ", error);
+    }
+  };
 
-  // let star = 3;
-  // const stararr = Array.from({ length: star }, (_, i) => i + 1);
-  const addStar = () => {
-    setStar((prev: number[]) => {
-      const newStarCount = prev.length + 1;
-      return Array.from({ length: newStarCount }, (_, i) => i + 1);
-    });
+  const onRefresh = React.useCallback(async () => {
+    // fetch server
+    setRefreshing(true);
+    try {
+      const getId = await AsyncStorage.getItem(USER_DATA_KEY);
+      if (!getId) {
+        router.replace("/(auth)/LoginForm");
+        return;
+      }
+      const parseID = JSON.parse(getId);
+      const data = await AsyncStorage.getItem(TAKER_STORAGE_KEY);
+      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
+      const userTaskreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.docId}`
+      );
+      const userMoodreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.docId}`
+      );
+
+      const userTaskData = await userTaskreq.json();
+      const userMoodData = await userMoodreq.json();
+
+      if (data && userData) {
+        const parseData = JSON.parse(data);
+        setPastMoods(parseData.pastmoods);
+        setTasks(parseData.tasks);
+        setStar(parseData.star);
+      }
+    } catch (e) {
+      console.log("Refresh Error: ", e);
+    }
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
+  const addStar = async () => {
+    try {
+      setStar((prev: number[]) => {
+        const newStarCount = prev.length + 1;
+        return Array.from({ length: newStarCount }, (_, i) => i + 1);
+      });
+    } catch (e) {
+      console.log("Add Star Error: ", e);
+    }
   };
   const handerMoodtracking = () => {
     router.push("/(app)/(taker)/moodTracking");
@@ -95,7 +171,9 @@ export default function HomePage() {
         {/* stars go here! */}
         <View style={takerStyles.starRow}>
           {star.map((star) => (
-            <Text key={star} style={takerStyles.star}>⭐</Text>
+            <Text key={star} style={takerStyles.star}>
+              ⭐
+            </Text>
           ))}
         </View>
         <Pressable
@@ -113,8 +191,13 @@ export default function HomePage() {
 
   // ---------- Home ----------
   return (
-    <View style={{ flex: 1, position: "relative" }}>
-      <ScrollView contentContainerStyle={takerStyles.container}>
+    <View style={[{ flex: 1, position: "relative" }]}>
+      <ScrollView
+        contentContainerStyle={takerStyles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <Text style={takerStyles.greeting}>Hello {"username"}.</Text>
         <Pressable
           style={takerStyles.moodBox}
@@ -198,19 +281,49 @@ export default function HomePage() {
         <View style={takerStyles.taskBox}>
           {tasks.map((task) => (
             <View key={task.id} style={takerStyles.taskCard}>
-              <Text style={takerStyles.taskTitle}>{task.title}</Text>
-              <Text style={takerStyles.taskTime}>{task.time}</Text>
+              <View style={takerStyles.statusBarContent}>
+                {task.status === "DONE" ? (
+                  <View
+                    style={[
+                      takerStyles.statusBar,
+                      { backgroundColor: "#73E34A" },
+                    ]}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      takerStyles.statusBar,
+                      { backgroundColor: "#FF2222" },
+                    ]}
+                  />
+                )}
+                <Text style={takerStyles.taskTitle}>{task.title}</Text>
+              </View>
+              <Text style={takerStyles.taskTime}>{task.due_time}</Text>
             </View>
           ))}
         </View>
       </ScrollView>
-      
+
       <View style={takerStyles.sosContainer}>
+        <View style={takerStyles.leftspacer} />
         <Pressable
           style={takerStyles.sosButton}
           onPress={() => console.log("SOS Pressed")}
         >
           <Text style={takerStyles.sosText}>SOS</Text>
+        </Pressable>
+        <Pressable
+          style={takerStyles.logoutButton}
+          onPress={() => handleLogout()}
+        >
+          <MaterialIcons
+            style={{ textAlign: "center" }}
+            name="logout"
+            size={24}
+            color={"#ffffff"}
+          />
+          <Text style={takerStyles.logoutText}>Logout</Text>
         </Pressable>
       </View>
     </View>

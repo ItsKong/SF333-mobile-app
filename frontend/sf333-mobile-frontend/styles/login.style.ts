@@ -47,7 +47,7 @@ export const loginStyles = StyleSheet.create({
   },
   bottom: {
     position: "absolute",
-    bottom: 60,
+    bottom: -100,
   },
   termsText: {
     fontSize: 20,
@@ -135,5 +135,10 @@ export const loginStyles = StyleSheet.create({
   loginSideButtonText: {
      color: "black",
     fontSize: 14,
+  },
+  docId: {
+    color: '#5E6CA8',
+    textAlign: 'center',
+    fontSize: 18,
   }
 });

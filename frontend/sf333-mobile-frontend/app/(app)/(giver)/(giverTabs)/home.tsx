@@ -1,43 +1,77 @@
 // app/giver/CareGiverHome.tsx
 
+import { useAuth } from "@/contexts/AuthProvider";
 import { useGiver } from "@/contexts/GiverContexts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useCallback } from "react";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function GiverHome() {
   const router = useRouter();
-  const {pastMoods, tasks, todayMood, setTasks, setPastMoods, setTodayMood, STORAGE_KEY} = useGiver();
+  const [refreshing, setRefreshing] = React.useState(false);
+  const {
+    pastMoods,
+    tasks,
+    todayMood,
+    setTasks,
+    setPastMoods,
+    setTodayMood,
+    STORAGE_KEY,
+  } = useGiver();
+  const {USER_DATA_KEY} = useAuth()
 
-  useFocusEffect(
-    useCallback(() => {
-      const fetchingData = async () => {
-        try{
-          const data = await AsyncStorage.getItem(STORAGE_KEY);
-          console.log(data)
-          // if(data) {
-          //   const parseData = JSON.parse(data);
-          //   console.log(parseData.pastmoods)
-          //   setTasks(parseData.tasks)
-          //   setPastMoods(parseData.pastmoods)
-          //   setTodayMood(parseData.todayMood)
-          //   return
-          // }
-        } catch (error) {
-          console.log('Error loading data: ', error);
-        }
+  const onRefresh = React.useCallback(async () => {
+    // fetch server
+    setRefreshing(true);
+    try {
+      const getId = await AsyncStorage.getItem(USER_DATA_KEY);
+      if (!getId) {
+        router.replace("/(auth)/LoginForm");
+        return;
       }
-      fetchingData()
-      return () => null;
-    },[])
-  )
+      const parseID = JSON.parse(getId);
+      const data = await AsyncStorage.getItem(STORAGE_KEY);
+      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
+      const userTaskreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.docId}`
+      );
+      const userMoodreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.docId}`
+      );
 
+      const userTaskData = await userTaskreq.json();
+      const userMoodData = await userMoodreq.json();
 
+      if (data && userData) {
+        const parseData = JSON.parse(data);
+        setPastMoods(parseData.pastmoods);
+        setTasks(parseData.tasks);
+        // setStar(parseData.star);
+      }
+    } catch (e) {
+      console.log("Refresh Error: ", e);
+    }
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
 
   return (
     <View style={{ flex: 1, position: "relative" }}>
-      <ScrollView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Today's Mood */}
         <Text style={styles.header}>Poom’s today Mood</Text>
         <Text style={styles.moodEmoji}>{todayMood.emoji}</Text>

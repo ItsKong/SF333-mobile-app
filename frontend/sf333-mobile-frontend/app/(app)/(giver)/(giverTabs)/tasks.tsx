@@ -1,32 +1,78 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { taskStyle } from "@/styles/giverTasks.style";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useGiver } from "@/contexts/GiverContexts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthProvider";
+
+interface TaskParams {
+  id: string;
+  title: string;
+  due_time: string;
+  date: string;
+  frequency: string;
+  description?: string; // description is optional
+  pageState: string;
+  docId: string;
+  linked_id: string;
+}
+
 
 export default function tasks() {
   const router = useRouter();
   const ICON_SIZE = 64; // Match your icon size
-  const {tasks} = useGiver();
+  const { tasks } = useGiver();
+  const { USER_DATA_KEY } = useAuth();
+  const [docId, setDocId] = useState("");
+  const [linked_id, setLinked_id] = useState("");
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        try {
+          const userD = await AsyncStorage.getItem(USER_DATA_KEY);
+          if (!userD) {
+            router.replace('/(auth)/LoginForm');
+            AsyncStorage.clear();
+            return;
+          } else {
+            const parseUser = await JSON.parse(userD)
+            console.log("Task page:", parseUser.docId);
+            setDocId(parseUser.docId)
+            setLinked_id(parseUser.userData.linked_to)
+          }
+        } catch (error) {
+          console.error("Error reading storage:", error);
+        }
+      };
+
+      fetchData();
+      return () => null;
+    }, [])
+  );
 
   // Delete task
   const handleDeleteTask = (id: string) => {
     null;
   };
 
-  const handleTaskInteract = (pageState: string, item?: any) => {
+  const handleTaskInteract = (pageState: string, item?: TaskParams) => {
     if (item) {
       router.push({
         pathname: "/modifyTask",
         params: {
           id: item.id,
-          name: item.title,
+          title: item.title,
           date: item.date || "",
-          time: item.due_time,
+          due_time: item.due_time,
+          frequency: item.frequency,
           pageState: pageState,
+          docId: docId,
+          linked_id: linked_id,
         },
       });
     } else {
@@ -34,6 +80,8 @@ export default function tasks() {
         pathname: "/modifyTask",
         params: {
           pageState: pageState,
+          docId: docId,
+          linked_id: linked_id,
         },
       });
     }
@@ -50,7 +98,7 @@ export default function tasks() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => handleTaskInteract("edit", item)}
+            onPress={() => handleTaskInteract("edit", item as TaskParams)}
             style={{ flex: 1 }}
           >
             <View style={taskStyle.taskCard}>
