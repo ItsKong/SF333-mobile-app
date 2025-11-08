@@ -3,6 +3,20 @@ const router = express.Router();
 const admin = require("firebase-admin");
 const db = admin.firestore();
 
+const shouldReset = (updatedAt, frequency) => {
+  if (!updatedAt) return false;
+  const now = new Date();
+  const lastUpdate = updatedAt.toDate();
+  const diffDays = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+  
+  switch (frequency) {
+    case "Daily": return diffDays >= 1;
+    case "Weekly": return diffDays >= 7;
+    case "Monthly": return diffDays >= 30;
+    default: return false;
+  }
+};
+
 // POST /tasks - Create a new task
 router.post("/", async (req, res) => {
   try {
@@ -86,6 +100,93 @@ router.post("/", async (req, res) => {
   }
 });
 
+// GET /tasks/eachday/:user_id
+router.get("/eachday/:user_id", async (req, res) => {
+  try {
+    const user_id = req.params.user_id;
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: "user_id is required" });
+    }
+
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const snapshot = await db.collection("tasks")
+      .where("assigned_to", "==", user_id)
+      .get();
+
+    let tasks = [];
+    const batch = db.batch();
+    let hasUpdates = false;
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const { frequency, status, updatedAt } = data;
+
+      // Auto-reset task
+      if (status === "DONE" && frequency && shouldReset(updatedAt, frequency)) {
+        const ref = db.collection("tasks").doc(doc.id);
+        batch.update(ref, {
+          status: "DOING",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        data.status = "DOING";
+        hasUpdates = true;
+      }
+
+      // Filter tasks by due_date in this week
+      if (data.due_date) {
+        const dueDate = data.due_date.toDate ? data.due_date.toDate() : new Date(data.due_date);
+        if (dueDate >= startOfWeek && dueDate <= endOfWeek) {
+          tasks.push({ id: doc.id, ...data });
+        }
+      }
+    });
+
+    if (hasUpdates) await batch.commit();
+
+    // Sort tasks
+    tasks.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+
+    // Group by weekday
+    const grouped = tasks.reduce((acc, task) => {
+      const day = new Date(task.due_date).toLocaleDateString("en-US", { weekday: "long" });
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(task);
+      return acc;
+    }, {});
+
+    // Ensure all days exist
+    const allDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    allDays.forEach(day => {
+      if (!grouped[day]) grouped[day] = [];
+    });
+
+    res.json({
+      success: true,
+      week_range: {
+        start: startOfWeek.toISOString(),
+        end: endOfWeek.toISOString()
+      },
+      grouped_tasks: grouped
+    });
+
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch tasks",
+      details: error.message
+    });
+  }
+});
+
 // GET /tasks/:id - Get a specific task with user details populated
 router.get("/:id", async (req, res) => {
   try {
@@ -146,19 +247,19 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// GET /tasks/user/:userId - Get all tasks for a specific user
-// :userId is the Firestore document ID
-router.get("/user/:userId", async (req, res) => {
+// GET /tasks/user/:user_id - Get all tasks for a specific user
+// :user_id is the Firestore document ID
+router.get("/user/:user_id", async (req, res) => {
   try {
     const { role } = req.query; // Optional: filter by role (created/assigned/all)
-    const userId = req.params.userId; // Firestore document ID
+    const user_id = req.params.user_id; // Firestore document ID
 
     let tasks = [];
 
     if (role === "created") {
       // Only tasks created by this user (using Firestore doc ID)
       const snapshot = await db.collection("tasks")
-        .where("created_by", "==", userId)
+        .where("created_by", "==", user_id)
         .orderBy("createdAt", "desc")
         .get();
       
@@ -168,7 +269,7 @@ router.get("/user/:userId", async (req, res) => {
     } else if (role === "assigned") {
       // Only tasks assigned to this user (using Firestore doc ID)
       const snapshot = await db.collection("tasks")
-        .where("assigned_to", "==", userId)
+        .where("assigned_to", "==", user_id)
         .orderBy("createdAt", "desc")
         .get();
       
@@ -178,12 +279,12 @@ router.get("/user/:userId", async (req, res) => {
     } else {
       // Get both created and assigned tasks (default)
       const createdSnapshot = await db.collection("tasks")
-        .where("created_by", "==", userId)
+        .where("created_by", "==", user_id)
         .orderBy("createdAt", "desc")
         .get();
       
       const assignedSnapshot = await db.collection("tasks")
-        .where("assigned_to", "==", userId)
+        .where("assigned_to", "==", user_id)
         .orderBy("createdAt", "desc")
         .get();
 
