@@ -10,6 +10,7 @@ router.post("/", async (req, res) => {
       title,
       content,
       due_time,
+      due_date,
       status,
       frequency,
       created_by, // Firestore document ID (e.g., "abc123xyz") of the user creating the task
@@ -55,6 +56,7 @@ router.post("/", async (req, res) => {
       title,
       content: content || null,
       due_time: due_time || null,
+      due_date: due_date || null,
       status: status || "pending",
       frequency: frequency || null,
       created_by: created_by, // Firestore document ID of creator
