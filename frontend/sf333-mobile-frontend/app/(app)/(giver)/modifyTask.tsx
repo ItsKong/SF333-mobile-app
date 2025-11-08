@@ -1,19 +1,30 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import useDatePicker from "@/hooks/useDatePicker";
 import { iosDatePicker } from "@/styles/iosDatePicker";
 import useTimePicker from "@/hooks/useTimePicker";
+import DropDownPicker from "react-native-dropdown-picker";
 
 interface TaskParams {
   id: string;
-  name: string;
+  title: string;
+  due_time: string;
   date: string;
-  time: string;
+  frequency: string;
   description?: string; // description is optional
   pageState: string;
+  docId: string;
+  linked_id: string;
 }
 
 export default function EditmodifyTaskTask() {
@@ -27,37 +38,107 @@ export default function EditmodifyTaskTask() {
   const [task, setTask] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [pageState, setPageState] = useState("");
+  const [pardocId, setDocId] = useState("");
+  const [parlinked_id, setLinked_id] = useState("");
 
-  const {
-    dateOfBirth,
-    toggleDatepicker,
-    renderDatePicker,
-    setDateOfBirth,
-  } = useDatePicker();
-  const {
-    selectedTime,
-    toggleTimepicker,
-    renderTimePicker,
-  } = useTimePicker();
+  //dropdown value here!
+  const [frequen, setFrequen] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([
+    { label: "Daily", value: "Daily" },
+    { label: "Weekly", value: "Weekly" },
+    { label: "Once", value: "Once" },
+  ]);
+  //===========================
+  const { dateOfBirth, toggleDatepicker, renderDatePicker, setDateOfBirth } =
+    useDatePicker();
+  const { selectedTime, toggleTimepicker, renderTimePicker } = useTimePicker();
 
   useFocusEffect(
     useCallback(() => {
-      const { id, name, date, time, description, pageState } = params;
+      const {
+        id,
+        title,
+        date,
+        due_time,
+        description,
+        pageState,
+        docId,
+        linked_id,
+      } = params;
       setPageState(pageState as any);
       if (id) setId(id);
-      if (name) setparamTask(name);
+      if (title) setparamTask(title);
       if (date) setParamDate(date);
-      if (time) setParamTime(time)
+      if (due_time) setParamTime(due_time);
+      if (docId) setDocId(docId);
+      if (linked_id) setLinked_id(linked_id);
       setparamTaskDescription((description as string) || "");
+      // console.log(docId, linked_id);
       return () => null;
     }, [params])
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // TODO: update tasks in global state /storage
     // 1.update local first for UI update
     // 2.synce to server
-    router.back();
+    // const {
+    //   title,
+    //   content,
+    //   due_time,
+    //   status,
+    //   frequency,
+    //   created_by, // Firestore document ID (e.g., "abc123xyz") of the user creating the task
+    //   assigned_to, // Optional: Firestore document ID to override auto-assignment
+    // } = req.body;
+    if (pageState === "add") {
+      try {
+        const formdata = {
+          title: task,
+          content: taskDescription ? taskDescription : paramtaskDescription,
+          due_time: selectedTime ? selectedTime : paramTime,
+          status: "MISSING",
+          frequency: frequen,
+          created_by: pardocId,
+          assigned_to: parlinked_id,
+        };
+
+        const addTaskreq = await fetch(
+          process.env.EXPO_PUBLIC_POST_TASKDATA as string,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formdata),
+          }
+        );
+
+        const addTaskData = await addTaskreq.json();
+
+        if (addTaskData.success) {
+          console.log(addTaskData.message);
+          console.log("Task data: ", addTaskData.data);
+        } else {
+          console.log("Add task Error: ", addTaskData.error);
+          Alert.alert("Error", "Something wrong.");
+        }
+      } catch (e) {
+        console.log("Try add task Error: ", e);
+      }
+    } else {
+      try {
+        const formdata = {
+          title: task,
+          content: taskDescription ? taskDescription : paramtaskDescription,
+          due_time: selectedTime ? selectedTime : paramTime,
+          frequency: frequen,
+          created_by: pardocId,
+          assigned_to: parlinked_id,
+        };
+      } catch (e) {
+        console.log("Edit task Error: ", e);
+      }
+    }
   };
 
   return (
@@ -73,24 +154,48 @@ export default function EditmodifyTaskTask() {
         </Pressable>
       </View>
       <View style={styles.headerContainer}>
-        <Text style={styles.header}>{pageState === 'add'? 'ADD TASK': 'EDIT TASK'}</Text>
+        <Text style={styles.header}>
+          {pageState === "add" ? "ADD TASK" : "EDIT TASK"}
+        </Text>
       </View>
       <View style={styles.card}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Task name</Text>
-          <TextInput style={styles.input} value={task ? task : paramtask} onChangeText={setTask} />
+          <TextInput
+            style={styles.input}
+            value={task ? task : paramtask}
+            onChangeText={setTask}
+          />
         </View>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Date</Text>
           <Pressable onPress={toggleDatepicker}>
-            <Text style={[styles.input]}>{dateOfBirth ? dateOfBirth : paramDate}</Text>
+            <Text style={[styles.input]}>
+              {dateOfBirth ? dateOfBirth : paramDate}
+            </Text>
           </Pressable>
         </View>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Time</Text>
           <Pressable onPress={toggleTimepicker}>
-            <Text style={[styles.input]}>{selectedTime ? selectedTime : paramTime}</Text>
+            <Text style={[styles.input]}>
+              {selectedTime ? selectedTime : paramTime}
+            </Text>
           </Pressable>
+        </View>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Frequency</Text>
+          <DropDownPicker
+            open={open}
+            value={frequen}
+            items={items}
+            setOpen={setOpen}
+            setValue={setFrequen}
+            setItems={setItems}
+            placeholder=""
+            listMode="SCROLLVIEW"
+            style={styles.FrequencyDropdown}
+          />
         </View>
         {/* New Description Input */}
         <View style={styles.inputGroup}>
@@ -111,8 +216,8 @@ export default function EditmodifyTaskTask() {
             <Text style={styles.saveBtnText}>SAVE TASK</Text>
           </LinearGradient>
         </Pressable>
-      {renderDatePicker()}
-      {renderTimePicker()}
+        {renderDatePicker()}
+        {renderTimePicker()}
       </View>
     </LinearGradient>
   );
@@ -160,4 +265,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  FrequencyDropdown: {
+    backgroundColor: "#f1f5f9",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
 });

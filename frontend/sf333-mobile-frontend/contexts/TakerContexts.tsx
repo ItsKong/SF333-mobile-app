@@ -14,6 +14,7 @@ interface TakerContextType {
   tasks: TaskItem[]
   setTasks: (value: TaskItem[]) => void;
   setIsButtonPress: (value: boolean) => void;
+  TAKER_STORAGE_KEY: string;
 }
 
 interface MoodItem {
@@ -24,10 +25,17 @@ interface MoodItem {
 }
 
 interface TaskItem {
-  id: number;
+  id: string;
   title: string;
-  time: string;
+  due_time: string;
+  date?: string;
+  status?: string;
+  created_by?: string;
+  assigned_to?: string;
+  describtion?: string;
+  frequency?: "everyday" | "weekly";
 }
+
 
 const moodColors: Record<string, string> = {
   happy: "#BCE69B",
@@ -51,6 +59,7 @@ export const TakerProvider = ({ children }: { children: ReactNode }) => {
   const [pastmoods, setPastMoods] = useState<MoodItem[]>([]);
   const [star, setStar] = useState<number[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const TAKER_STORAGE_KEY = '@care_taker';
 
   return (
     <TakerContext.Provider
@@ -67,6 +76,7 @@ export const TakerProvider = ({ children }: { children: ReactNode }) => {
         setStar,
         tasks,
         setTasks,
+        TAKER_STORAGE_KEY,
       }}
     >
       {children}

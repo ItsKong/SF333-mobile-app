@@ -1,25 +1,26 @@
 import { router, useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { takerStyles } from "@/styles/taker.style";
 import { useTaker } from "@/contexts/TakerContexts";
 
 export default function MoodTracking() {
-    const {setMood, setDate, setIsButtonPress} = useTaker();
-    const handlePress = (mood: string) => {
-        setMood(mood);
-        setDate(0);
-        setIsButtonPress(true);
-        router.back();
+  const { setMood, setDate, setIsButtonPress } = useTaker();
+  const handlePress = async (mood: string) => {
+    try {
+      setMood(mood);
+      setDate(0);
+      setIsButtonPress(true);
+    } catch (e) {
+      console.log("MoodTracking Error: ", e);
+    } finally {
+      router.back();
     }
+  };
+  
   return (
     <View style={takerStyles.moodContainer}>
-      {/* Back Button */} 
+      {/* Back Button */}
       <Text style={takerStyles.headerBox}>Mood tracking</Text>
       <Text style={takerStyles.question}>How are you feeling?...</Text>
 

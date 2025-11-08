@@ -16,7 +16,7 @@ export const takerStyles = StyleSheet.create({
   },
   howareyoutoday: {
     fontSize: 24,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginVertical: 25,
   },
   todayyouare: {
@@ -71,7 +71,7 @@ export const takerStyles = StyleSheet.create({
   starRow: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    flexWrap: "wrap"
+    flexWrap: "wrap",
   },
   star: {
     fontSize: 28,
@@ -126,6 +126,7 @@ export const takerStyles = StyleSheet.create({
   taskTitle: {
     fontSize: 18,
     color: "#000",
+    // paddingLeft: ,
   },
   taskTime: {
     fontSize: 18,
@@ -134,12 +135,13 @@ export const takerStyles = StyleSheet.create({
   },
   sosContainer: {
     position: "absolute",
+    flexDirection: "row",
     bottom: 0,
     width: "100%",
-    height: 65,
+    height: 100,
     backgroundColor: "#5A5A5A",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
   sosButton: {
     width: 100,
@@ -208,5 +210,28 @@ export const takerStyles = StyleSheet.create({
     position: "absolute",
     left: "7%",
     top: "5%",
+  },
+  statusBar: {
+    width: 1,
+    backgroundColor: "#333",
+    marginRight: 10,
+    position: "relative",
+  },
+  statusBarContent: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+  },
+  leftspacer: {
+    width: 80,
+  },
+  logoutButton: {
+     width: 80,
+     alignContent: 'center',
+     justifyContent: 'center',
+  },
+  logoutText: {
+    color:'#ffffff',
+    textAlign: 'center',
+    paddingBottom: 30,
   },
 });

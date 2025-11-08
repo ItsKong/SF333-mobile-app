@@ -1,12 +1,21 @@
-import { View, Text, TextInput, Pressable, Animated } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Animated,
+  Alert,
+} from "react-native";
 import { loginStyles } from "@/styles/login.style";
 import { useAuth } from "@/contexts/AuthProvider";
-import { router, useFocusEffect, useLocalSearchParams} from "expo-router";
-import { useCallback } from "react";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useState } from "react";
 import { useLoginLayout } from "@/contexts/LoginLayoutProvider";
+import * as Clipboard from "expo-clipboard";
 
 export default function SignupConnect() {
   const { userRole } = useAuth();
+  const [link_id, setLink_id] = useState("");
   const { setOnBackPress, setShowBackButton } = useLoginLayout();
 
   // ✅ Get docId from route.params
@@ -14,6 +23,16 @@ export default function SignupConnect() {
   console.log("Firestore document ID from signup:", docId);
 
   const isSupervisor = userRole === "caregiver";
+
+  const copyToClipboard = async (textToCopy: string) => {
+    // Use setStringAsync from expo-clipboard
+    await Clipboard.setStringAsync(textToCopy);
+    // Optional: Provide feedback to the user
+    Alert.alert(
+      "Copied!",
+      `"${textToCopy}" has been copied to your clipboard.`
+    );
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -28,8 +47,47 @@ export default function SignupConnect() {
     }, [])
   );
 
-  const handleConnect = () => {
-    router.replace("/(app)");
+  const handleContinue = () => {
+    Alert.alert(
+      "Connected?",
+      "Please make sure you and your supervisor is connected.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "OK",
+          onPress: () => {
+            router.replace("/(app)");
+          },
+        },
+      ]
+    );
+  };
+
+  const handleConnect = async () => {
+    try {
+      const body = { linked_to: link_id };
+      const req = await fetch(
+        `${process.env.EXPO_PUBLIC_PUT_LINKED_TO}/${docId}/link`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+      const reqdata = await req.json();
+      console.log("server response: ", reqdata);
+      if (reqdata.success) {
+        console.log("Link Success");
+        router.replace("/(app)");
+      } else {
+        console.log("Link Error: ", reqdata.error);
+      }
+    } catch (e) {
+      console.log("Connect page Error: ", e);
+    }
   };
 
   return (
@@ -44,7 +102,12 @@ export default function SignupConnect() {
       </Text>
       {isSupervisor ? (
         <>
-          <TextInput style={loginStyles.formInput} placeholder="connect code" />
+          <TextInput
+            style={loginStyles.formInput}
+            placeholder="link code"
+            value={link_id}
+            onChangeText={setLink_id}
+          />
           <View>
             <Pressable
               style={({ pressed }) => [
@@ -60,15 +123,18 @@ export default function SignupConnect() {
       ) : (
         <>
           <View style={loginStyles.formInput}>
-            <Text>{docId}</Text>
+            <Pressable onPress={() => copyToClipboard(docId as string)}>
+              <Text style={loginStyles.docId}>{docId}</Text>
+            </Pressable>
           </View>
+          <Text>(Tab code to copy)</Text>
           <View>
             <Pressable
               style={({ pressed }) => [
                 loginStyles.confirmbutt,
                 { backgroundColor: pressed ? "#DBE8F5" : "#A7C7E7" },
               ]}
-              onPress={handleConnect}
+              onPress={handleContinue}
             >
               <Text>connect</Text>
             </Pressable>

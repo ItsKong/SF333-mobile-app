@@ -16,9 +16,10 @@ import { iosDatePicker } from "@/styles/iosDatePicker";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useLoginLayout } from "@/contexts/LoginLayoutProvider";
 import { Link, router, useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SignupForm() {
-  const { userRole } = useAuth();
+  const { userRole, USER_DATA_KEY } = useAuth();
   const isSupervisor = userRole === "caregiver";
   const { setOnBackPress, setShowBackButton } = useLoginLayout();
 
@@ -151,8 +152,6 @@ export default function SignupForm() {
             gender,
             birth_date: dateOfBirth,
             phone_number: phone,
-            emergency_contact: emergency,
-            diagnosis,
             user_role: "caregiver",
           }
         : {
@@ -161,6 +160,8 @@ export default function SignupForm() {
             gender,
             birth_date: dateOfBirth,
             phone_number: phone,
+            emergency_contact: emergency,
+            diagnosis,
             user_role: "caretaker",
           };
     const requiredFields = Object.entries(formData);
@@ -175,16 +176,16 @@ export default function SignupForm() {
         missingFields.push(readableKey);
       }
     }
-    console.log(missingFields)
+    console.log(missingFields);
     if (missingFields.length > 0) {
       const missingFieldsString = missingFields.join(", ");
       const alertMessage = `Please fill out the following required fields: ${missingFieldsString}.`;
       alert(alertMessage);
     } else {
       const apiUrl = process.env.EXPO_PUBLIC_API_URL as string;
-        // userRole === "caregiver"
-        //   ? "http://192.168.1.3:3000/disability"
-        //   : "http://192.168.1.3:3000/disability";
+      // userRole === "caregiver"
+      //   ? "http://192.168.1.3:3000/disability"
+      //   : "http://192.168.1.3:3000/disability";
 
       Alert.alert(
         "Confirm Information",
@@ -225,9 +226,19 @@ export default function SignupForm() {
                 if (usernameResp.ok && usernameData.length > 0) {
                   const docId = usernameData[0].id;
                   console.log("Firestore document ID:", docId);
+                  console.log("User data: ", usernameData[0]);
 
                   // 3️⃣ Save it in state or localStorage for next screen
                   // Example: router.push and pass params
+                  await AsyncStorage.setItem(
+                    USER_DATA_KEY,
+                    JSON.stringify({
+                      userData: usernameData[0],
+                      docId: usernameData[0].id,
+                      userRole: usernameData[0].user_role,
+                    })
+                  );
+                  
                   router.push({
                     pathname: "/(auth)/SignupConnect",
                     params: { docId: createResult.id },
@@ -247,7 +258,7 @@ export default function SignupForm() {
         ],
         { cancelable: false }
       );
-    };
+    }
   };
 
   return (
@@ -309,7 +320,7 @@ export default function SignupForm() {
       />
 
       {/* Supervisor-only Fields */}
-      {isSupervisor && (
+      {!isSupervisor && (
         <>
           <TextInput
             style={loginStyles.formInput}
@@ -342,13 +353,15 @@ export default function SignupForm() {
       </View>
 
       {/* TOS */}
-      <Text style={{ fontSize: 16, marginTop: 20 }}>
-        By signing up, I agree to Fantistic’s{" "}
-        <Link href={"https://www.youtube.com/"}>
-          <Text style={{ color: "#1261B1" }}>Term Of Service</Text>
-        </Link>
-      </Text>
-      {/* Date Picker Modal */}
+      <View>
+        <Text style={{ fontSize: 16, marginTop: 20 }}>
+          By signing up, I agree to Fantistic’s{" "}
+          <Link href={"https://www.youtube.com/"}>
+            <Text style={{ color: "#1261B1" }}>Term Of Service</Text>
+          </Link>
+        </Text>
+        {/* Date Picker Modal */}
+      </View>
       {renderDatePicker()}
     </Animated.View>
   );
