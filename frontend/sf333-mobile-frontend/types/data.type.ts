@@ -13,8 +13,12 @@ export interface TaskItem {
 
 export interface MoodItem {
   color?: string;
-  date: number;
+  date: Date;
   mood: string;
   emoji?: string | null;
   index?: number;
+  // createdAt
+  // record_by
+  // record_time
+  // updatedAt
 }

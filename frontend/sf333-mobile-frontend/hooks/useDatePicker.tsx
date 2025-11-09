@@ -66,7 +66,7 @@ export default function useDatePicker() {
           display="default"
           value={date}
           onChange={onChange}
-          maximumDate={new Date()}
+          minimumDate={new Date()}
         />
       );
     }

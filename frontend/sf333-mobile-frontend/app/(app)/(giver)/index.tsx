@@ -62,7 +62,7 @@ export default function AppIndex() {
           const userTaskData = await userTaskreq.json();
           const userMoodData = await userMoodreq.json();
           // console.log("userTask", userTaskData);
-          // console.log("userMood", userMoodData);
+          console.log("userMood", userMoodData);
 
           const taskwithIndexNum = userTaskData.tasks.map(
             (item: any, index: number) => ({

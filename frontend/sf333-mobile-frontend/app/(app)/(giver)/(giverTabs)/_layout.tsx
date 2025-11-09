@@ -33,7 +33,7 @@ export default function GiverTabLayout() {
   };
   return (
     <Tabs
-      screenOptions={{ headerShown: false, tabBarActiveTintColor: "#5463a8ff" }}
+      screenOptions={{ headerShown: false, tabBarActiveTintColor: "#768fffff" , tabBarInactiveTintColor: "#5463a8ff"}}
     >
       <Tabs.Screen
         name="home"

@@ -101,6 +101,7 @@ export default function useTimePicker() {
   return {
     selectedTime,
     showTimePicker,
+    setSelectedTime,
     toggleTimepicker,
     onTimeChange,
     confirmIOSTime,

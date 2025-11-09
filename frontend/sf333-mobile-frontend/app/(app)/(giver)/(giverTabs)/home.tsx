@@ -2,10 +2,12 @@
 
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGiver } from "@/contexts/GiverContexts";
+import useGiverRefresh from "@/hooks/useGiverRefresh";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -28,6 +30,7 @@ export default function GiverHome() {
     STORAGE_KEY,
   } = useGiver();
   const { USER_DATA_KEY } = useAuth();
+  const { addMoodColorEmojiIndex, addTaskIndex } = useGiverRefresh();
 
   useFocusEffect(
     useCallback(() => {
@@ -58,26 +61,27 @@ export default function GiverHome() {
         return;
       }
       const parseID = JSON.parse(getId);
-      const data = await AsyncStorage.getItem(STORAGE_KEY);
-      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
       const userTaskreq = await fetch(
-        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.docId}`
+        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.userData.linked_to}`
       );
       const userMoodreq = await fetch(
-        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.docId}`
+        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.userData.linked_to}`
       );
 
       const userTaskData = await userTaskreq.json();
       const userMoodData = await userMoodreq.json();
 
-      if (data && userData) {
-        const parseData = JSON.parse(data);
-        setPastMoods(parseData.pastmoods);
-        setTasks(parseData.tasks);
-        // setStar(parseData.star);
+      if (userTaskData.success && userMoodData.success) {
+        const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
+        const formatTask = addTaskIndex(userTaskData.tasks);
+        setPastMoods(formatMood);
+        setTasks(formatTask);
+      } else {
+        console.log("Error fetching data: ", userTaskData);
       }
     } catch (e) {
       console.log("Refresh Error: ", e);
+      Alert.alert("Error refreshing", `Something wrong. Error: ${e}`);
     }
     setTimeout(() => {
       setRefreshing(false);
@@ -97,9 +101,7 @@ export default function GiverHome() {
         <Text style={styles.moodEmoji}>{todayMood.emoji}</Text>
 
         {/* Mood History */}
-        <Text style={styles.subHeader}>
-          {username}'s mood in past 7 days:
-        </Text>
+        <Text style={styles.subHeader}>{username}'s mood in past 7 days:</Text>
         <View style={styles.moodRow}>
           {pastMoods.map((item, index) => (
             <Text key={index} style={styles.moodHistory}>

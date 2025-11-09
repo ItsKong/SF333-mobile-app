@@ -1,9 +1,17 @@
 import React, { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useGiver } from "@/contexts/GiverContexts";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthProvider";
+import useGiverRefresh from "@/hooks/useGiverRefresh";
 
 // Mock StatsCard Component
 const StatsCard = ({ title, value }: { title: string; value: string }) => (
@@ -27,6 +35,7 @@ export default function Dashboard() {
   const { USER_DATA_KEY } = useAuth();
   const [percent, setPercent] = useState(0);
   const [refreshing, setRefreshing] = React.useState(false);
+  const { addMoodColorEmojiIndex, addTaskIndex } = useGiverRefresh();
 
   const onRefresh = React.useCallback(async () => {
     // fetch server
@@ -35,29 +44,31 @@ export default function Dashboard() {
       const getId = await AsyncStorage.getItem(USER_DATA_KEY);
       if (!getId) {
         router.replace("/(auth)/LoginForm");
+        AsyncStorage.clear();
         return;
       }
       const parseID = JSON.parse(getId);
-      const data = await AsyncStorage.getItem(STORAGE_KEY);
-      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
       const userTaskreq = await fetch(
-        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.docId}`
+        `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${parseID.userData.linked_to}`
       );
       const userMoodreq = await fetch(
-        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.docId}`
+        `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.userData.linked_to}`
       );
 
       const userTaskData = await userTaskreq.json();
       const userMoodData = await userMoodreq.json();
 
-      if (data && userData) {
-        const parseData = JSON.parse(data);
-        setPastMoods(parseData.pastmoods);
-        setTasks(parseData.tasks);
-        // setStar(parseData.star);
+      if (userTaskData.success && userMoodData.success) {
+        const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
+        const formatTask = addTaskIndex(userTaskData.tasks);
+        setPastMoods(formatMood);
+        setTasks(formatTask);
+      } else {
+        console.log("Error fetching data: ", userTaskData);
       }
     } catch (e) {
       console.log("Refresh Error: ", e);
+      Alert.alert("Error refreshing", `Something wrong. Error: ${e}`);
     }
     setTimeout(() => {
       setRefreshing(false);

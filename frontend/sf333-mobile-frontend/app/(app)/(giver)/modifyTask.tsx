@@ -27,7 +27,7 @@ interface TaskParams {
 export default function EditmodifyTaskTask() {
   const router = useRouter();
   const params = useLocalSearchParams() as unknown as Partial<TaskParams>;
-  const {tasks} = useGiver();
+  const { tasks } = useGiver();
   const [id, setId] = useState("");
   const [task, setTask] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
@@ -45,47 +45,47 @@ export default function EditmodifyTaskTask() {
     { label: "Once", value: "Once" },
   ]);
   //===========================
-  const {date, setDate, formatedDate, toggleDatepicker, renderDatePicker, setFormatedDate } =
-    useDatePicker();
-  const { selectedTime, toggleTimepicker, renderTimePicker } = useTimePicker();
+  const {
+    date,
+    setDate,
+    formatedDate,
+    toggleDatepicker,
+    renderDatePicker,
+    setFormatedDate,
+  } = useDatePicker();
+  const { selectedTime, setSelectedTime, toggleTimepicker, renderTimePicker } = useTimePicker();
 
   useFocusEffect(
     useCallback(() => {
-      const {
-        id,
-        pageState,
-        docId,
-        linked_id,
-      } = params;
+      const { id, pageState, docId, linked_id } = params;
       setPageState(pageState as any);
       if (id) setId(id);
       if (docId) setDocId(docId);
       if (linked_id) setLinked_id(linked_id);
-      const getmatch = tasks.find(task => task.id === id);
-      setmatchedTask(getmatch)
+      const getmatch = tasks.find((task) => task.id === id);
+      if (getmatch) {
+        setmatchedTask(getmatch);
+        setTask(getmatch.title);
+        setFrequen(getmatch.frequency as any);
+        setFormatedDate(getmatch.due_date as any);
+        setTaskDescription(getmatch.content as any);
+        setSelectedTime(getmatch.due_time);
+      }
       console.log("Modify page: ", matchedTask);
       return () => null;
-    }, [params])
+    }, [])
   );
 
   const handleSave = async () => {
     // TODO: update tasks in global state /storage
     // 1.update local first for UI update
     // 2.synce to server
-    // const {
-    //   title,
-    //   content,
-    //   due_time,
-    //   status,
-    //   frequency,
-    //   created_by, // Firestore document ID (e.g., "abc123xyz") of the user creating the task
-    //   assigned_to, // Optional: Firestore document ID to override auto-assignment
-    // } = req.body;
+
     if (pageState === "add") {
       try {
         const formdata = {
           title: task,
-          content: taskDescription ,
+          content: taskDescription,
           due_time: selectedTime,
           status: "MISSING",
           frequency: frequen,
@@ -107,27 +107,90 @@ export default function EditmodifyTaskTask() {
         if (addTaskData.success) {
           console.log(addTaskData.message);
           console.log("Task data: ", addTaskData.data);
+          Alert.alert("Add Task Successfully.", "Task have been added.", [
+            {
+              text: "OK",
+              onPress: () => {
+                router.back();
+              },
+            },
+          ]);
         } else {
           console.log("Add task Error: ", addTaskData.error);
-          Alert.alert("Error", "Something wrong.");
+          Alert.alert(
+            "Edit task Error.",
+            "Something wrong. Please try again later.",
+            [
+              {
+                text: "OK",
+                onPress: () => {},
+              },
+            ]
+          );
         }
       } catch (e) {
         console.log("Try add task Error: ", e);
+        Alert.alert("Edit task Error.", `Error: ${e}`, [
+          {
+            text: "OK",
+            onPress: () => {},
+          },
+        ]);
       }
     } else {
       try {
         // edit => update obj and sync server
         const formdata = {
-          title: task,
+          title: task ? task : matchedTask?.title,
           content: taskDescription ? taskDescription : matchedTask?.content,
           due_time: selectedTime ? selectedTime : matchedTask?.due_time,
           due_date: formatedDate ? formatedDate : matchedTask?.due_date,
-          frequency: frequen ? frequen: matchedTask?.frequency,
+          frequency: frequen ? frequen : matchedTask?.frequency,
           created_by: pardocId,
           assigned_to: parlinked_id,
         };
+
+        const editreq = await fetch(
+          `${process.env.EXPO_PUBLIC_POST_TASKDATA}/${id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formdata),
+          }
+        );
+
+        const editres = await editreq.json();
+        if (editreq.ok) {
+          console.log("Edit task Success: ", editres.message);
+          Alert.alert("Edit Task Successfully.", "Task have been updated.", [
+            {
+              text: "OK",
+              onPress: () => {
+                router.back();
+              },
+            },
+          ]);
+        } else {
+          console.log("Edit task Error: ", editres.error);
+          Alert.alert(
+            "Edit task Error.",
+            "Something wrong. Please try again later.",
+            [
+              {
+                text: "OK",
+                onPress: () => {},
+              },
+            ]
+          );
+        }
       } catch (e) {
         console.log("Edit task Error: ", e);
+        Alert.alert("Edit task Error.", `Error: ${e}`, [
+          {
+            text: "OK",
+            onPress: () => {},
+          },
+        ]);
       }
     }
   };
@@ -152,33 +215,25 @@ export default function EditmodifyTaskTask() {
       <View style={styles.card}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Task name</Text>
-          <TextInput
-            style={styles.input}
-            value={task ? task : matchedTask?.title}
-            onChangeText={setTask}
-          />
+          <TextInput style={styles.input} value={task} onChangeText={setTask} />
         </View>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Date</Text>
           <Pressable onPress={toggleDatepicker}>
-            <Text style={[styles.input]}>
-              {formatedDate ? formatedDate: matchedTask?.due_date}
-            </Text>
+            <Text style={[styles.input]}>{formatedDate}</Text>
           </Pressable>
         </View>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Time</Text>
           <Pressable onPress={toggleTimepicker}>
-            <Text style={[styles.input]}>
-              {selectedTime ? selectedTime : matchedTask?.due_time}
-            </Text>
+            <Text style={[styles.input]}>{selectedTime}</Text>
           </Pressable>
         </View>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Frequency</Text>
           <DropDownPicker
             open={open}
-            value={(frequen ?? matchedTask?.frequency) as string | null}
+            value={frequen}
             items={items}
             setOpen={setOpen}
             setValue={setFrequen}
@@ -193,7 +248,7 @@ export default function EditmodifyTaskTask() {
           <Text style={styles.label}>Description</Text>
           <TextInput
             style={[styles.input, { height: 80, textAlignVertical: "top" }]}
-            value={taskDescription ? taskDescription : matchedTask?.content}
+            value={taskDescription}
             onChangeText={setTaskDescription}
             placeholder="Enter task details..."
             multiline
