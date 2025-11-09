@@ -19,6 +19,6 @@ export interface MoodItem {
   index?: number;
   // createdAt
   // record_by
-  // record_time
+  record_time?: Date;
   // updatedAt
 }

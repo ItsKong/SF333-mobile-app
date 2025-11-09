@@ -61,6 +61,16 @@ export default function Dashboard() {
       if (userTaskData.success && userMoodData.success) {
         const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
         const formatTask = addTaskIndex(userTaskData.tasks);
+
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            pastmoods: formatMood,
+            tasks: formatTask,
+            // todayMood: todaymood,
+          })
+        );
+
         setPastMoods(formatMood);
         setTasks(formatTask);
       } else {
@@ -96,6 +106,7 @@ export default function Dashboard() {
 
   return (
     <ScrollView
+      style={styles.scrollView}
       contentContainerStyle={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -111,13 +122,15 @@ export default function Dashboard() {
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderText, { flex: 2 }]}>Tasks</Text>
           <Text style={[styles.tableHeaderText, { flex: 1 }]}>Date</Text>
-          <Text style={[styles.tableHeaderText, { flex: 1 }]}>Y/N</Text>
+          <Text style={[styles.tableHeaderText, { flex: 1 }]}>Status</Text>
         </View>
 
         {tasks.map((item, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.taskText, { flex: 2 }]}>{item.title}</Text>
-            <Text style={[styles.dateText, { flex: 1 }]}>{item.due_date}</Text>
+            <Text style={[styles.dateText, { flex: 1 }]}>
+              {item.due_date}
+            </Text>
             <Text
               style={[
                 styles.statusText,
@@ -146,7 +159,9 @@ export default function Dashboard() {
             <View style={styles.moodIndicator}>
               <Text style={styles.moodEmoji}>{item.emoji}</Text>
             </View>
-            <Text style={[styles.dateText, { flex: 1 }]}>{item.date}</Text>
+            <Text style={[styles.dateText, { flex: 1 }]}>
+              {"Mood created date"}
+            </Text>
           </View>
         ))}
       </View>
@@ -155,7 +170,11 @@ export default function Dashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F9FC", padding: 20 },
+  container: { padding: 20 },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#F7F9FC",
+  },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",

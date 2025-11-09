@@ -38,7 +38,7 @@ export default function AppIndex() {
         // fetching local is not สบาย for testing so skipy skipy
         if (storedData) {
           // Parse and use stored data
-          console.log("Giver loading fix data from storage: ", storedData);
+          // console.log("Giver loading fix data from storage: ", storedData);
           const parseData = JSON.parse(storedData);
           setPastMoods(parseData.pastmoods);
           setTasks(parseData.tasks);
@@ -50,7 +50,6 @@ export default function AppIndex() {
         } else {
           console.log("Giver loading fix data:");
           const parseUser = JSON.parse(userdata);
-          console.log("Inside taker loaded userdata:", parseUser);
           const docId = parseUser.userData.linked_to;
           const userTaskreq = await fetch(
             `${process.env.EXPO_PUBLIC_GET_TASKDATA_BYUSER}/${docId}`
@@ -58,28 +57,77 @@ export default function AppIndex() {
           const userMoodreq = await fetch(
             `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${docId}`
           );
+          const userMoodTDreq = await fetch(
+            `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/today/user/${docId}`
+          );
 
           const userTaskData = await userTaskreq.json();
           const userMoodData = await userMoodreq.json();
+          const userMoodTDres = await userMoodTDreq.json();
           // console.log("userTask", userTaskData);
-          console.log("userMood", userMoodData);
+          // console.log("userMood", userMoodData);
+          if (userMoodTDres.success) {
+            console.log(userMoodTDres.message);
+          } else {
+            console.log(userMoodTDres.error)
+          }
 
           const taskwithIndexNum = userTaskData.tasks.map(
-            (item: any, index: number) => ({
-              ...item,
-              index: index + 1,
-            })
+            (item: any, index: number) => {
+              if (item.due_date && item.due_date._seconds !== undefined) {
+                const firebasetime = item.due_date;
+                // console.log("firebasetime", firebasetime);
+                const milliseconds =
+                  firebasetime._seconds * 1000 +
+                  firebasetime._nanoseconds / 1000000;
+                const dateObject = new Date(milliseconds);
+                return {
+                  ...item,
+                  index: index + 1,
+                  due_date: dateObject.toISOString(),
+                };
+              }
+              return {
+                ...item,
+                index: index + 1,
+              };
+            }
           );
 
           const moodwithColorEmojiIndex = userMoodData.moods.map(
-            (item: any, index: number) => ({
-              ...item,
-              color: moodColors[item.mood],
-              emoji: moodemoji[item.mood],
-              index: index + 1,
-            })
+            (item: any, index: number) => {
+              if (item.due_date && item.due_date._seconds !== undefined) {
+                const firebasetime = item.due_date;
+                // console.log("firebasetime", firebasetime);
+                const milliseconds =
+                  firebasetime._seconds * 1000 +
+                  firebasetime._nanoseconds / 1000000;
+                const dateObject = new Date(milliseconds);
+                console.log(
+                  "dateObject",
+                  dateObject,
+                  "Due time: ",
+                  item.due_time
+                );
+                return {
+                  ...item,
+                  index: index + 1,
+                  color: moodColors[item.mood],
+                  emoji: moodemoji[item.mood],
+                  due_date: dateObject,
+                };
+              }
+              return {
+                ...item,
+                color: moodColors[item.mood],
+                emoji: moodemoji[item.mood],
+                index: index + 1,
+              };
+            }
           );
-          console.log("moodwithColorEmojiIndex: ", moodwithColorEmojiIndex);
+
+          // console.log("moodwithColorEmojiIndex: ", moodwithColorEmojiIndex)
+          console.log("taskwithIndexNum", taskwithIndexNum);
           await AsyncStorage.setItem(
             STORAGE_KEY,
             JSON.stringify({

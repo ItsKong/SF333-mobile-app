@@ -74,6 +74,16 @@ export default function GiverHome() {
       if (userTaskData.success && userMoodData.success) {
         const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
         const formatTask = addTaskIndex(userTaskData.tasks);
+
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            pastmoods: formatMood,
+            tasks: formatTask,
+            // todayMood: todaymood,
+          })
+        );
+
         setPastMoods(formatMood);
         setTasks(formatTask);
       } else {
@@ -89,54 +99,55 @@ export default function GiverHome() {
   }, []);
 
   return (
-    <View style={{ flex: 1, position: "relative" }}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {/* Today's Mood */}
-        <Text style={styles.header}>{username}’s today Mood</Text>
-        <Text style={styles.moodEmoji}>{todayMood.emoji}</Text>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      {/* Today's Mood */}
+      <Text style={styles.header}>{username}’s today Mood</Text>
+      <Text style={styles.moodEmoji}>{todayMood?.emoji}</Text>
 
-        {/* Mood History */}
-        <Text style={styles.subHeader}>{username}'s mood in past 7 days:</Text>
-        <View style={styles.moodRow}>
-          {pastMoods.map((item, index) => (
-            <Text key={index} style={styles.moodHistory}>
-              {item.emoji}
+      {/* Mood History */}
+      <Text style={styles.subHeader}>{username}'s mood in past 7 days:</Text>
+      <View style={styles.moodRow}>
+        {pastMoods.map((item, index) => (
+          <Text key={index} style={styles.moodHistory}>
+            {item.emoji}
+          </Text>
+        ))}
+      </View>
+
+      {/* Task status */}
+      <Text style={styles.subHeader}>Today's tasks status</Text>
+      <View style={styles.taskContainer}>
+        {tasks.map((task, index) => (
+          <View key={index} style={styles.taskCard}>
+            <Text style={styles.taskTitle}>{task.title}</Text>
+            <Text
+              style={[
+                styles.taskStatus,
+                task.status === "DONE" ? styles.done : styles.missed,
+              ]}
+            >
+              {task.status}
             </Text>
-          ))}
-        </View>
-
-        {/* Task status */}
-        <Text style={styles.subHeader}>Today's tasks status</Text>
-        <View style={styles.taskContainer}>
-          {tasks.map((task, index) => (
-            <View key={index} style={styles.taskCard}>
-              <Text style={styles.taskTitle}>{task.title}</Text>
-              <Text
-                style={[
-                  styles.taskStatus,
-                  task.status === "DONE" ? styles.done : styles.missed,
-                ]}
-              >
-                {task.status}
-              </Text>
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-    </View>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#fff",
     padding: 20,
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#F7F9FC",
   },
   header: {
     marginTop: 10,

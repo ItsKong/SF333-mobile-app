@@ -136,16 +136,6 @@ export default function HomePage() {
     }, 2000);
   }, []);
 
-  const addStar = async () => {
-    try {
-      setStar((prev: number[]) => {
-        const newStarCount = prev.length + 1;
-        return Array.from({ length: newStarCount }, (_, i) => i + 1);
-      });
-    } catch (e) {
-      console.log("Add Star Error: ", e);
-    }
-  };
   const handleMoodtracking = () => {
     if (todaymood) {
       null;

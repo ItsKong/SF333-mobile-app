@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { TaskItem, MoodItem } from "@/types/data.type";
 
 interface GiverContextType {
-  todayMood: MoodItem;
+  todayMood: MoodItem | null;
   setTodayMood: (value: MoodItem) => void;
   pastMoods: MoodItem[];
   setPastMoods: (value: MoodItem[]) => void;
@@ -17,11 +17,7 @@ const GiverContext = createContext<GiverContextType | undefined>(undefined);
 export const GiverProvider = ({ children }: { children: ReactNode }) => {
   const [pastMoods, setPastMoods] = useState<MoodItem[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const [todayMood, setTodayMood] = useState<MoodItem>({
-    color: "#BCE69B",
-    date: 0,
-    mood: "happy",
-  });
+  const [todayMood, setTodayMood] = useState<MoodItem | null>(null);
   const STORAGE_KEY = "@care_giver";
 
   return (

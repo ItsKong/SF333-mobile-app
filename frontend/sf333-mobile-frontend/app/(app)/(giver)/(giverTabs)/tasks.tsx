@@ -26,7 +26,7 @@ export default function tasks() {
   const [docId, setDocId] = useState("");
   const [linked_id, setLinked_id] = useState("");
   const [refreshing, setRefreshing] = React.useState(false);
-  const { addTaskIndex } = useGiverRefresh();
+  const { addTaskIndex , addMoodColorEmojiIndex} = useGiverRefresh();
 
   useFocusEffect(
     useCallback(() => {
@@ -47,7 +47,7 @@ export default function tasks() {
           console.error("Error reading storage:", error);
         }
       };
-
+      onRefresh();
       fetchData();
       return () => null;
     }, [])
@@ -75,7 +75,17 @@ export default function tasks() {
       const userMoodData = await userMoodreq.json();
 
       if (userTaskData.success && userMoodData.success) {
+        const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
         const formatTask = addTaskIndex(userTaskData.tasks);
+
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            pastmoods: formatMood,
+            tasks: formatTask,
+            // todayMood: todaymood,
+          })
+        );
         setTasks(formatTask);
       } else {
         console.log("Error fetching data: ", userTaskData);
@@ -90,8 +100,30 @@ export default function tasks() {
   }, []);
 
   // Delete task
-  const handleDeleteTask = (id: string) => {
-    null;
+  const handleDeleteTask = async (id: string) => {
+    console.log("Task id: ", id);
+    try {
+
+      const deletereq = await fetch(
+        `${process.env.EXPO_PUBLIC_POST_TASKDATA}/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const deleteres = await deletereq.json();
+      
+      if (deleteres.success) {
+        console.log(deleteres.message);
+        onRefresh();
+      } else {
+        console.log(deleteres.error);
+        Alert.alert("Error", `Delete task server Error: ${deleteres.error}`)
+      }
+    } catch (e) {
+      console.log("Delete Error: ", e);
+      Alert.alert("Error", `Delete task Error: ${e}`)
+    }
   };
 
   const handleTaskInteract = (pageState: string, item?: any) => {

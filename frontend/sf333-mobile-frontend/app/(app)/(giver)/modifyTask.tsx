@@ -16,6 +16,7 @@ import useTimePicker from "@/hooks/useTimePicker";
 import DropDownPicker from "react-native-dropdown-picker";
 import { useGiver } from "@/contexts/GiverContexts";
 import { TaskItem } from "@/types/data.type";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface TaskParams {
   id: string;
@@ -53,7 +54,8 @@ export default function EditmodifyTaskTask() {
     renderDatePicker,
     setFormatedDate,
   } = useDatePicker();
-  const { selectedTime, setSelectedTime, toggleTimepicker, renderTimePicker } = useTimePicker();
+  const { selectedTime, setSelectedTime, toggleTimepicker, renderTimePicker } =
+    useTimePicker();
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +65,7 @@ export default function EditmodifyTaskTask() {
       if (docId) setDocId(docId);
       if (linked_id) setLinked_id(linked_id);
       const getmatch = tasks.find((task) => task.id === id);
+      console.log("enter modify task date: ", getmatch?.due_date);
       if (getmatch) {
         setmatchedTask(getmatch);
         setTask(getmatch.title);
@@ -82,10 +85,18 @@ export default function EditmodifyTaskTask() {
     // 2.synce to server
 
     if (pageState === "add") {
+      if (!formatedDate) {
+        Alert.alert("Please enter date");
+        return;
+      }
+      const [day, month, year] = formatedDate.split("/");
+      const formDate = `${year}-${month}-${day}T${selectedTime}:00Z`;
+      console.log("ISO DATE: ", formDate);
       try {
         const formdata = {
           title: task,
           content: taskDescription,
+          due_date: formDate,
           due_time: selectedTime,
           status: "MISSING",
           frequency: frequen,
@@ -140,11 +151,13 @@ export default function EditmodifyTaskTask() {
     } else {
       try {
         // edit => update obj and sync server
+        const [day, month, year] = formatedDate.split("/");
+        const formDate = `${year}-${month}-${day}T${selectedTime? selectedTime: matchedTask?.due_time}:00Z`;
         const formdata = {
           title: task ? task : matchedTask?.title,
           content: taskDescription ? taskDescription : matchedTask?.content,
           due_time: selectedTime ? selectedTime : matchedTask?.due_time,
-          due_date: formatedDate ? formatedDate : matchedTask?.due_date,
+          due_date: formatedDate ? formDate : matchedTask?.due_date,
           frequency: frequen ? frequen : matchedTask?.frequency,
           created_by: pardocId,
           assigned_to: parlinked_id,

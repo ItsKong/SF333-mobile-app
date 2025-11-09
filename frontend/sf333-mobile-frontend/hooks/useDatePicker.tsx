@@ -14,7 +14,7 @@ export default function useDatePicker() {
   // Date picker state (internal to component)
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
-  const [formatedDate, setFormatedDate] = useState(null);
+  const [formatedDate, setFormatedDate] = useState("");
 
   const toggleDatepicker = () => {
     setShowPicker(!showPicker);
@@ -33,7 +33,7 @@ export default function useDatePicker() {
       // Format the date for display
       const formattedDate = currentDate.toLocaleDateString("en-GB", {
         day: "2-digit",
-        month: "short",
+        month: "2-digit",
         year: "numeric",
       });
       setFormatedDate(formattedDate as any);
