@@ -4,52 +4,18 @@ const admin = require("firebase-admin");
 const db = admin.firestore();
 
 const shouldReset = (updatedAt, frequency) => {
-  if (!updatedAt || !frequency) return false;
+  if (!updatedAt) return false;
   const now = new Date();
   const lastUpdate = updatedAt.toDate();
   const diffDays = (now - lastUpdate) / (1000 * 60 * 60 * 24);
   
-  // Make it case-insensitive
-  const freq = frequency.toLowerCase();
-  
-  switch (freq) {
-    case "daily": return diffDays >= 1;
-    case "weekly": return diffDays >= 7;
-    case "biweekly": return diffDays >= 14;
-    case "monthly": return diffDays >= 30;
-    case "yearly": return diffDays >= 365;
+  switch (frequency) {
+    case "Daily": return diffDays >= 1;
+    case "Weekly": return diffDays >= 7;
+    case "Monthly": return diffDays >= 30;
     default: return false;
   }
 };
-
-function calculateNextDueDate(oldDueDate, frequency) {
-  const newDate = new Date(oldDueDate);
-  
-  // Make it case-insensitive
-  const freq = frequency.toLowerCase();
-  
-  switch (freq) {
-    case "daily":
-      newDate.setDate(newDate.getDate() + 1);
-      break;
-    case "weekly":
-      newDate.setDate(newDate.getDate() + 7);
-      break;
-    case "biweekly":
-      newDate.setDate(newDate.getDate() + 14);
-      break;
-    case "monthly":
-      newDate.setMonth(newDate.getMonth() + 1);
-      break;
-    case "yearly":
-      newDate.setFullYear(newDate.getFullYear() + 1);
-      break;
-    default:
-      newDate.setDate(newDate.getDate() + 1);
-  }
-  
-  return newDate;
-}
 
 // POST /tasks - Create a new task
 router.post("/", async (req, res) => {
@@ -99,25 +65,12 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Convert due_date string to Firestore Timestamp if provided
-    let dueDateTimestamp = null;
-    if (due_date) {
-      try {
-        dueDateTimestamp = admin.firestore.Timestamp.fromDate(new Date(due_date));
-      } catch (error) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid due_date format. Use ISO 8601 format (e.g., 2025-11-09T10:00:00Z)"
-        });
-      }
-    }
-
     // Create the task document
     const docRef = await db.collection("tasks").add({
       title,
       content: content || null,
       due_time: due_time || null,
-      due_date: dueDateTimestamp, // Store as Firestore Timestamp
+      due_date: due_date || null,
       status: status || "DOING",
       frequency: frequency || null,
       created_by: created_by, // Firestore document ID of creator
@@ -133,8 +86,7 @@ router.post("/", async (req, res) => {
       message: "Task created successfully",
       data: {
         created_by: created_by,
-        assigned_to: assignedToId,
-        due_date: due_date // Return original string for reference
+        assigned_to: assignedToId
       }
     });
 
@@ -158,7 +110,7 @@ router.get("/eachday/:user_id", async (req, res) => {
 
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
     startOfWeek.setHours(7, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
@@ -175,81 +127,45 @@ router.get("/eachday/:user_id", async (req, res) => {
 
     snapshot.forEach(doc => {
       const data = doc.data();
-      const { frequency, status, updatedAt, due_date } = data;
+      const { frequency, status, updatedAt} = data;
 
-      // Auto-reset completed recurring tasks
+      // Auto-reset task
       if (status === "DONE" && frequency && shouldReset(updatedAt, frequency)) {
         const ref = db.collection("tasks").doc(doc.id);
-        
-        const oldDueDate = due_date.toDate ? due_date.toDate() : new Date(due_date);
-        const newDueDate = calculateNextDueDate(oldDueDate, frequency);
-        
         batch.update(ref, {
           status: "DOING",
-          due_date: admin.firestore.Timestamp.fromDate(newDueDate),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
-        
         data.status = "DOING";
-        data.due_date = newDueDate;
         hasUpdates = true;
       }
 
-      // Auto-mark overdue tasks as MISS (TIME-BASED)
-      if (due_date && status === "DOING") {
-        const dueDate = due_date.toDate ? due_date.toDate() : new Date(due_date);
-        
-        // Check if due time has passed (includes time)
-        if (dueDate < now) {
-          const ref = db.collection("tasks").doc(doc.id);
-          batch.update(ref, {
-            status: "MISSED",
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          });
-          
-          data.status = "MISSED";
-          hasUpdates = true;
-        }
-      }
-
-      // Include all tasks with due_date
+      // Filter tasks by due_date in this week
       if (data.due_date) {
-        tasks.push({ id: doc.id, ...data });
+        const dueDate = data.due_date.toDate ? data.due_date.toDate() : new Date(data.due_date);
+        if (dueDate >= startOfWeek && dueDate <= endOfWeek) {
+          tasks.push({ id: doc.id, ...data });
+        }
       }
     });
 
     if (hasUpdates) await batch.commit();
 
-    // Sort tasks by due_date
-    tasks.sort((a, b) => {
-      const dateA = a.due_date.toDate ? a.due_date.toDate() : new Date(a.due_date);
-      const dateB = b.due_date.toDate ? b.due_date.toDate() : new Date(b.due_date);
-      return dateA - dateB;
-    });
+    // Sort tasks
+    tasks.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 
-    // Group by category
-    const categorized = {
-      overdue: [],
-      thisWeek: {},
-      upcoming: []
-    };
+    // Group by weekday
+    const grouped = tasks.reduce((acc, task) => {
+      const day = new Date(task.due_date).toLocaleDateString("en-US", { weekday: "long" });
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(task);
+      return acc;
+    }, {});
 
+    // Ensure all days exist
     const allDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     allDays.forEach(day => {
-      categorized.thisWeek[day] = [];
-    });
-
-    tasks.forEach(task => {
-      const dueDate = task.due_date.toDate ? task.due_date.toDate() : new Date(task.due_date);
-      
-      if (dueDate < startOfWeek) {
-        categorized.overdue.push(task);
-      } else if (dueDate >= startOfWeek && dueDate <= endOfWeek) {
-        const day = dueDate.toLocaleDateString("en-US", { weekday: "long" });
-        categorized.thisWeek[day].push(task);
-      } else {
-        categorized.upcoming.push(task);
-      }
+      if (!grouped[day]) grouped[day] = [];
     });
 
     res.json({
@@ -258,9 +174,7 @@ router.get("/eachday/:user_id", async (req, res) => {
         start: startOfWeek.toISOString(),
         end: endOfWeek.toISOString()
       },
-      overdue: categorized.overdue,
-      grouped_tasks: categorized.thisWeek,
-      upcoming: categorized.upcoming
+      grouped_tasks: grouped
     });
 
   } catch (error) {
