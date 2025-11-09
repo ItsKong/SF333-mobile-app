@@ -21,12 +21,18 @@ import useGiverRefresh from "@/hooks/useGiverRefresh";
 export default function tasks() {
   const router = useRouter();
   const ICON_SIZE = 64; // Match your icon size
-  const { tasks, setTasks, STORAGE_KEY } = useGiver();
+  const {
+    tasks,
+    setTasks,
+    TASK_STORAGE_KEY,
+    MOOD_STORAGE_KEY,
+    MOODTD_STORAGE_KEY,
+  } = useGiver();
   const { USER_DATA_KEY } = useAuth();
   const [docId, setDocId] = useState("");
   const [linked_id, setLinked_id] = useState("");
   const [refreshing, setRefreshing] = React.useState(false);
-  const { addTaskIndex , addMoodColorEmojiIndex} = useGiverRefresh();
+  const { addTaskIndex, addMoodColorEmojiIndex } = useGiverRefresh();
 
   useFocusEffect(
     useCallback(() => {
@@ -79,13 +85,19 @@ export default function tasks() {
         const formatTask = addTaskIndex(userTaskData.tasks);
 
         await AsyncStorage.setItem(
-          STORAGE_KEY,
+          TASK_STORAGE_KEY,
           JSON.stringify({
-            pastmoods: formatMood,
             tasks: formatTask,
-            // todayMood: todaymood,
           })
         );
+
+        await AsyncStorage.setItem(
+          MOOD_STORAGE_KEY,
+          JSON.stringify({
+            pastmoods: formatMood,
+          })
+        );
+
         setTasks(formatTask);
       } else {
         console.log("Error fetching data: ", userTaskData);
@@ -103,7 +115,6 @@ export default function tasks() {
   const handleDeleteTask = async (id: string) => {
     console.log("Task id: ", id);
     try {
-
       const deletereq = await fetch(
         `${process.env.EXPO_PUBLIC_POST_TASKDATA}/${id}`,
         {
@@ -112,17 +123,17 @@ export default function tasks() {
       );
 
       const deleteres = await deletereq.json();
-      
+
       if (deleteres.success) {
         console.log(deleteres.message);
         onRefresh();
       } else {
         console.log(deleteres.error);
-        Alert.alert("Error", `Delete task server Error: ${deleteres.error}`)
+        Alert.alert("Error", `Delete task server Error: ${deleteres.error}`);
       }
     } catch (e) {
       console.log("Delete Error: ", e);
-      Alert.alert("Error", `Delete task Error: ${e}`)
+      Alert.alert("Error", `Delete task Error: ${e}`);
     }
   };
 

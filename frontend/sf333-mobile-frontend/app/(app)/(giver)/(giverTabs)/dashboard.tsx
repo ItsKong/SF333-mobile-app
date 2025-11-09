@@ -31,7 +31,15 @@ const StatsCard = ({ title, value }: { title: string; value: string }) => (
 
 export default function Dashboard() {
   const router = useRouter();
-  const { pastMoods, tasks, STORAGE_KEY, setPastMoods, setTasks } = useGiver();
+  const {
+    pastMoods,
+    tasks,
+    TASK_STORAGE_KEY,
+    MOOD_STORAGE_KEY,
+    MOODTD_STORAGE_KEY,
+    setPastMoods,
+    setTasks,
+  } = useGiver();
   const { USER_DATA_KEY } = useAuth();
   const [percent, setPercent] = useState(0);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -63,11 +71,16 @@ export default function Dashboard() {
         const formatTask = addTaskIndex(userTaskData.tasks);
 
         await AsyncStorage.setItem(
-          STORAGE_KEY,
+          TASK_STORAGE_KEY,
+          JSON.stringify({
+            tasks: formatTask,
+          })
+        );
+
+        await AsyncStorage.setItem(
+          MOOD_STORAGE_KEY,
           JSON.stringify({
             pastmoods: formatMood,
-            tasks: formatTask,
-            // todayMood: todaymood,
           })
         );
 
@@ -128,9 +141,7 @@ export default function Dashboard() {
         {tasks.map((item, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.taskText, { flex: 2 }]}>{item.title}</Text>
-            <Text style={[styles.dateText, { flex: 1 }]}>
-              {item.due_date}
-            </Text>
+            <Text style={[styles.dateText, { flex: 1 }]}>{item.due_date}</Text>
             <Text
               style={[
                 styles.statusText,

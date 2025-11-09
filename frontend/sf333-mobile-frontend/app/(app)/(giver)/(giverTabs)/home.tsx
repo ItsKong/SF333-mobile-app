@@ -27,7 +27,9 @@ export default function GiverHome() {
     setTasks,
     setPastMoods,
     setTodayMood,
-    STORAGE_KEY,
+    TASK_STORAGE_KEY,
+    MOOD_STORAGE_KEY,
+    MOODTD_STORAGE_KEY,
   } = useGiver();
   const { USER_DATA_KEY } = useAuth();
   const { addMoodColorEmojiIndex, addTaskIndex } = useGiverRefresh();
@@ -74,13 +76,17 @@ export default function GiverHome() {
       if (userTaskData.success && userMoodData.success) {
         const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
         const formatTask = addTaskIndex(userTaskData.tasks);
+        await AsyncStorage.setItem(
+          TASK_STORAGE_KEY,
+          JSON.stringify({
+            tasks: formatTask,
+          })
+        );
 
         await AsyncStorage.setItem(
-          STORAGE_KEY,
+          MOOD_STORAGE_KEY,
           JSON.stringify({
             pastmoods: formatMood,
-            tasks: formatTask,
-            // todayMood: todaymood,
           })
         );
 
@@ -108,7 +114,7 @@ export default function GiverHome() {
     >
       {/* Today's Mood */}
       <Text style={styles.header}>{username}’s today Mood</Text>
-      <Text style={styles.moodEmoji}>{todayMood?.emoji}</Text>
+      <Text style={styles.moodEmoji}>{todayMood? todayMood.emoji: ""}</Text>
 
       {/* Mood History */}
       <Text style={styles.subHeader}>{username}'s mood in past 7 days:</Text>
