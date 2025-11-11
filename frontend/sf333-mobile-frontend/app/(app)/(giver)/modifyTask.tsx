@@ -98,7 +98,7 @@ export default function EditmodifyTaskTask() {
           content: taskDescription,
           due_date: formDate,
           due_time: selectedTime,
-          status: "MISSING",
+          status: "DOING",
           frequency: frequen,
           created_by: pardocId,
           assigned_to: parlinked_id,
