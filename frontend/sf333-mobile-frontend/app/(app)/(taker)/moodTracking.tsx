@@ -32,17 +32,18 @@ export default function MoodTracking() {
           return;
       } else {
         const parseuser = await JSON.parse(userstorage);
-        settodaymood({
+        const newMood = {
           color: moodColors[mood],
           date: new Date(),
           mood: mood,
           emoji: moodemoji[mood],
-        });
+        }
+        settodaymood(newMood);
         
         await AsyncStorage.setItem(
           TODAY_MOOD_KEY,
           JSON.stringify({
-            today_mood: todaymood,
+            today_mood: newMood,
           })
         );
         

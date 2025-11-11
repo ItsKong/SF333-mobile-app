@@ -94,7 +94,7 @@ export default function useDatePicker() {
             display="spinner"
             value={date}
             onChange={onChange}
-            maximumDate={new Date()}
+            minimumDate={new Date()}
             style={iosDatePicker.iosPicker}
           />
         </View>
