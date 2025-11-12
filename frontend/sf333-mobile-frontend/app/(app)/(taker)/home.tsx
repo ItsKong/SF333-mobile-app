@@ -16,6 +16,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import useGiverRefresh from "@/hooks/useGiverRefresh";
 import { TaskItem } from "@/types/data.type";
 import useTakerReset from "@/hooks/useTakerReset";
+import * as Location from "expo-location";
 /**
  * How to reset Task:
  * Task question need to be reset when due_time come
@@ -280,6 +281,53 @@ export default function HomePage() {
     }
   };
 
+  const handleSOS = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Location permission is required to send SOS."
+        );
+        return;
+      }
+
+      // Get current location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const { latitude, longitude } = location.coords;
+      const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+      const sosreq = await fetch(`${process.env.EXPO_PUBLIC_POST_SOS}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: docId,
+          mapLink: googleMapsUrl,
+        }),
+      });
+
+      const sosres = await sosreq.json();
+
+      if (sosres.success) {
+        Alert.alert(
+          "SOS Sent",
+          "Your emergency alert has been sent successfully."
+        );
+      } else {
+        Alert.alert("SOS Failed", sosres.error || "Failed to send SOS.");
+      }
+    } catch (e) {
+      console.log("SOS error: ", e);
+      Alert.alert("SOS Error", `Could not send emergency alert: ${e}`);
+    }
+  };
+
   // ---------- Home ----------
   return (
     <View style={[{ flex: 1, position: "relative" }]}>
@@ -398,10 +446,7 @@ export default function HomePage() {
 
       <View style={takerStyles.sosContainer}>
         <View style={takerStyles.leftspacer} />
-        <Pressable
-          style={takerStyles.sosButton}
-          onPress={() => console.log("SOS Pressed")}
-        >
+        <Pressable style={takerStyles.sosButton} onPress={() => handleSOS()}>
           <Text style={takerStyles.sosText}>SOS</Text>
         </Pressable>
         <Pressable

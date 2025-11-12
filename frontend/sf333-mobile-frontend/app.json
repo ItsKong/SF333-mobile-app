@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.sf333mobilefrontend"
+      "bundleIdentifier": "com.anonymous.sf333mobilefrontend",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to send emergency alerts."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +21,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.sf333mobilefrontend"
+      "package": "com.anonymous.sf333mobilefrontend",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
       "bundler": "metro",
@@ -34,6 +38,12 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(Fantistic) to access your location."
         }
       ]
     ],
