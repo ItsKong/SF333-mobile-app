@@ -105,7 +105,7 @@ export default function AppIndex() {
             console.log(userMoodTDres.error);
           }
 
-          const rawtdmood = userMoodTDres.moods[0];
+          const rawtdmood = userMoodTDres.moods[0]? userMoodTDres.moods[0]: "";
           const today_mood = {
             ...rawtdmood,
             color: moodColors[rawtdmood.mood],
