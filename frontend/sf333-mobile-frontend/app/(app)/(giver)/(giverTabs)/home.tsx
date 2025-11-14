@@ -32,7 +32,7 @@ export default function GiverHome() {
     MOODTD_STORAGE_KEY,
   } = useGiver();
   const { USER_DATA_KEY } = useAuth();
-  const { addMoodColorEmojiIndex, addTaskIndex } = useGiverRefresh();
+  const { addMoodColorEmojiIndex, addTaskIndex , addTDMoodColorEmoji} = useGiverRefresh();
 
   useFocusEffect(
     useCallback(() => {
@@ -69,13 +69,18 @@ export default function GiverHome() {
       const userMoodreq = await fetch(
         `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.userData.linked_to}`
       );
+      const userMoodTDreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${parseID.userData.linked_to}`
+      );
 
       const userTaskData = await userTaskreq.json();
       const userMoodData = await userMoodreq.json();
+      const userMoodTDres = await userMoodTDreq.json();
 
-      if (userTaskData.success && userMoodData.success) {
+      if (userTaskData.success && userMoodData.success && userMoodTDres) {
         const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
         const formatTask = addTaskIndex(userTaskData.tasks);
+        const formatTDMood = addTDMoodColorEmoji(userMoodTDres);
         await AsyncStorage.setItem(
           TASK_STORAGE_KEY,
           JSON.stringify({
@@ -87,6 +92,13 @@ export default function GiverHome() {
           MOOD_STORAGE_KEY,
           JSON.stringify({
             pastmoods: formatMood,
+          })
+        );
+
+        await AsyncStorage.setItem(
+          MOODTD_STORAGE_KEY,
+          JSON.stringify({
+            todayMood: formatTDMood,
           })
         );
 
@@ -114,7 +126,7 @@ export default function GiverHome() {
     >
       {/* Today's Mood */}
       <Text style={styles.header}>{username}’s today Mood</Text>
-      <Text style={styles.moodEmoji}>{todayMood? todayMood.emoji: ""}</Text>
+      <Text style={styles.moodEmoji}>{todayMood ? todayMood.emoji : ""}</Text>
 
       {/* Mood History */}
       <Text style={styles.subHeader}>{username}'s mood in past 7 days:</Text>

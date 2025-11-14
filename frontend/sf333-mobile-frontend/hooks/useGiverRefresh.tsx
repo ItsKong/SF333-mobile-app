@@ -64,5 +64,16 @@ export default function useGiverRefresh() {
     );
     return moodwithColorEmojiIndex;
   };
-  return { addTaskIndex, addMoodColorEmojiIndex };
+
+  const addTDMoodColorEmoji = (userMoodTDres: any) => {
+    const rawtdmood = userMoodTDres.moods[0] ? userMoodTDres.moods[0] : "";
+    const today_mood = {
+      ...rawtdmood,
+      color: moodColors[rawtdmood.mood],
+      emoji: moodemoji[rawtdmood.mood],
+      index: 1,
+    };
+    return today_mood;
+  };
+  return { addTaskIndex, addMoodColorEmojiIndex, addTDMoodColorEmoji };
 }
