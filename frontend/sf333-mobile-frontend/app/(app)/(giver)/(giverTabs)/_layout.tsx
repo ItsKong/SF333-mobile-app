@@ -4,33 +4,12 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "@/contexts/AuthProvider";
 
 export default function GiverTabLayout() {
   const router = useRouter();
+  const { handleLogout } = useAuth();
   // stack of giver page group
-  const handleLogout = async () => {
-    try{
-      Alert.alert("Logout", "Are you sure you want to logout?", [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            // Add your logout logic here
-            console.log("User logged out");
-            await AsyncStorage.clear()
-            router.replace('/(auth)/LoginForm');
-            // Example: clear auth tokens, navigate to login, etc.
-          },
-        },
-      ]);
-    } catch (error) {
-      console.log("Error logout: ", error);
-    }
-  };
   return (
     <Tabs
       screenOptions={{ headerShown: false, tabBarActiveTintColor: "#768fffff" , tabBarInactiveTintColor: "#5463a8ff"}}

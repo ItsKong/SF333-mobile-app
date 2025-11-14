@@ -7,6 +7,7 @@ import { Alert } from "react-native";
 import { useAuth } from "@/contexts/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode, JwtPayload } from "jwt-decode";
+import { getFCMToken, requestUserPermission, sendTokenToBackend } from "@/hooks/useNotification";
 
 interface CustomJwtPayload extends JwtPayload {
   userId: string;
@@ -48,6 +49,18 @@ export default function LoginForm() {
             const decoded = jwtDecode<CustomJwtPayload>(docId);
             console.log("Firestore document ID:", decoded.userId);
             console.log("usernameData", usernameData.user);
+            let token = null;
+            try {
+              token = await getFCMToken();
+            } catch (e) {
+              console.log("Firebase setup warning:", e);
+            }
+
+            // 👇 CRITICAL STEP: Send the token to the backend
+            if (token && decoded.userId) {
+              // We don't await this because we don't want to block the user from entering the app
+              sendTokenToBackend(decoded.userId, token);
+            }
 
             await AsyncStorage.setItem(
               USER_DATA_KEY,

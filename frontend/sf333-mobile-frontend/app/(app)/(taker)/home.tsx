@@ -30,6 +30,7 @@ import {
  */
 
 export default function HomePage() {
+  const {handleLogout} = useAuth();
   const router = useRouter();
   const {
     todaymood,
@@ -297,31 +298,7 @@ export default function HomePage() {
         </Pressable> */}
       </>
     );
-  };
-
-  const handleLogout = async () => {
-    try {
-      Alert.alert("Logout", "Are you sure you want to logout?", [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: async () => {
-            // Add your logout logic here
-            console.log("User logged out");
-            await AsyncStorage.clear();
-            router.replace("/(auth)/LoginForm");
-            // Example: clear auth tokens, navigate to login, etc.
-          },
-        },
-      ]);
-    } catch (error) {
-      console.log("Error logout: ", error);
-    }
-  };
+  }; 
 
   const handleSOS = async () => {
     try {

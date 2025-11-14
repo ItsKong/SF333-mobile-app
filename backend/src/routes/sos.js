@@ -64,5 +64,48 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PUT /sos/save-token
+router.put("/save-token", async (req, res) => {
+  try {
+    const { userId, fcmToken } = req.body;
+
+    if (!userId || !fcmToken) {
+      return res.status(400).json({ error: "Missing userId or fcmToken" });
+    }
+
+    // Update the user document in Firestore with the new token
+    await db.collection("users").doc(userId).update({
+      fcmToken: fcmToken, // This must match what the SOS route looks for!
+      lastLogin: admin.firestore.FieldValue.serverTimestamp() // Optional: good for tracking
+    });
+
+    res.status(200).json({ success: true, message: "Token saved" });
+  } catch (error) {
+    console.error("Error saving token:", error);
+    res.status(500).json({ success: false, error: "Failed to save token" });
+  }
+});
+
+// DELETE /sos/remove-token
+// Call this when the user hits "Logout"
+router.delete("/remove-token", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing userId" });
+    }
+
+    // Delete the fcmToken field from this user's document
+    await db.collection("users").doc(userId).update({
+      fcmToken: admin.firestore.FieldValue.delete() 
+    });
+
+    res.status(200).json({ success: true, message: "Token removed" });
+  } catch (error) {
+    console.error("Error removing token:", error);
+    res.status(500).json({ success: false, error: "Failed to remove token" });
+  }
+});
 
 module.exports = router;

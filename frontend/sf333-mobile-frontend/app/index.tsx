@@ -1,14 +1,26 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  View,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthProvider";
-import { requestUserPermission, getFCMToken, onBackgroundMessage } from "@/hooks/useNotification";
-import { 
-  getMessaging, 
-  onMessage, 
-  setBackgroundMessageHandler 
-} from '@react-native-firebase/messaging';
+import {
+  requestUserPermission,
+  getFCMToken,
+  onBackgroundMessage,
+  removeTokenFromBackend,
+  sendTokenToBackend,
+} from "@/hooks/useNotification";
+import {
+  getMessaging,
+  onMessage,
+  setBackgroundMessageHandler,
+} from "@react-native-firebase/messaging";
 
 // THIS LOAD USER DATA
 // IF NOT FOUND => LOGIN
@@ -28,12 +40,12 @@ export default function AppIndex() {
   const { USER_DATA_KEY, setUserRole } = useAuth();
 
   useEffect(() => {
-
     const initializeApp = async () => {
       try {
+        let token = null;
         try {
           await requestUserPermission();
-          await getFCMToken();
+          token = await getFCMToken();
         } catch (e) {
           console.log("Firebase setup warning:", e);
         }
@@ -41,6 +53,13 @@ export default function AppIndex() {
         const userDatacache = await AsyncStorage.getItem(USER_DATA_KEY);
         if (userDatacache) {
           const user = JSON.parse(userDatacache);
+
+          // 👇 CRITICAL STEP: Send the token to the backend
+          if (token && user?.docId) {
+            // We don't await this because we don't want to block the user from entering the app
+            sendTokenToBackend(user.docId, token);
+          }
+
           setUserRole(user.userRole);
           router.replace("/(app)");
         } else {
@@ -58,8 +77,8 @@ export default function AppIndex() {
     // New: const unsubscribe = onMessage(messaging, ...)
     const unsubscribe = onMessage(messaging, async (remoteMessage) => {
       Alert.alert(
-        remoteMessage.notification?.title || 'New Message',
-        remoteMessage.notification?.body || 'You have a new notification'
+        remoteMessage.notification?.title || "New Message",
+        remoteMessage.notification?.body || "You have a new notification"
       );
     });
 
