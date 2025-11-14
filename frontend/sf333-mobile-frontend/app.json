@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.sf333mobilefrontend",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to send emergency alerts."
       }
@@ -22,7 +23,8 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.sf333mobilefrontend",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "googleServicesFile": "./google-services.json",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "android.permission.POST_NOTIFICATIONS"]
     },
     "web": {
       "bundler": "metro",
@@ -31,6 +33,16 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -43,7 +55,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(Fantistic) to access your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow Fantistic to access your location."
         }
       ]
     ],

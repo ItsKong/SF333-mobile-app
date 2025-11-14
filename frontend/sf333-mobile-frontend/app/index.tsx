@@ -1,11 +1,25 @@
 import { useRouter } from "expo-router";
-import { use, useEffect, useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, StyleSheet, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthProvider";
+import { requestUserPermission, getFCMToken, onBackgroundMessage } from "@/hooks/useNotification";
+import { 
+  getMessaging, 
+  onMessage, 
+  setBackgroundMessageHandler 
+} from '@react-native-firebase/messaging';
 
 // THIS LOAD USER DATA
 // IF NOT FOUND => LOGIN
+
+// 👇 INITIALIZE INSTANCE
+const messaging = getMessaging();
+
+// 👇 MODULAR BACKGROUND HANDLER REGISTRATION
+// Old: messaging().setBackgroundMessageHandler(...)
+// New: setBackgroundMessageHandler(messaging, ...)
+setBackgroundMessageHandler(messaging, onBackgroundMessage);
 
 export default function AppIndex() {
   const router = useRouter();
@@ -14,27 +28,43 @@ export default function AppIndex() {
   const { USER_DATA_KEY, setUserRole } = useAuth();
 
   useEffect(() => {
-    const fetchUser = async () => {
+
+    const initializeApp = async () => {
       try {
+        try {
+          await requestUserPermission();
+          await getFCMToken();
+        } catch (e) {
+          console.log("Firebase setup warning:", e);
+        }
+
         const userDatacache = await AsyncStorage.getItem(USER_DATA_KEY);
         if (userDatacache) {
-          const user = await JSON.parse(userDatacache);
-          console.log("Loaded from cache: ", user.userData);
-          setUserRole(user.userRole)
+          const user = JSON.parse(userDatacache);
+          setUserRole(user.userRole);
           router.replace("/(app)");
-          return;
         } else {
-          // No cache, go log in page
           console.log("No user in storage.");
         }
       } catch (error) {
-        console.log("User fetching Error: ", error);
+        console.log("Initialization Error: ", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUser();
+    // 👇 MODULAR FOREGROUND LISTENER
+    // Old: const unsubscribe = messaging().onMessage(...)
+    // New: const unsubscribe = onMessage(messaging, ...)
+    const unsubscribe = onMessage(messaging, async (remoteMessage) => {
+      Alert.alert(
+        remoteMessage.notification?.title || 'New Message',
+        remoteMessage.notification?.body || 'You have a new notification'
+      );
+    });
+
+    initializeApp();
+    return unsubscribe;
   }, []);
 
   useEffect(() => {

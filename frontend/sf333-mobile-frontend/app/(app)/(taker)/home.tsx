@@ -1,3 +1,12 @@
+import { useAuth } from "@/contexts/AuthProvider";
+import { useTaker } from "@/contexts/TakerContexts";
+import useGiverRefresh from "@/hooks/useGiverRefresh";
+import useTakerReset from "@/hooks/useTakerReset";
+import { takerStyles } from "@/styles/taker.style";
+import { TaskItem } from "@/types/data.type";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -8,15 +17,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { takerStyles } from "@/styles/taker.style";
-import { useTaker } from "@/contexts/TakerContexts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuth } from "@/contexts/AuthProvider";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import useGiverRefresh from "@/hooks/useGiverRefresh";
-import { TaskItem } from "@/types/data.type";
-import useTakerReset from "@/hooks/useTakerReset";
-import * as Location from "expo-location";
 /**
  * How to reset Task:
  * Task question need to be reset when due_time come
@@ -75,6 +75,47 @@ export default function HomePage() {
 
     return () => clearInterval(interval);
   }, [findCurrentTask]);
+
+  // Get task due date
+  const getTaskDueDate = useCallback((task: TaskItem | null) => {
+    if (!task) return null;
+    if (task.due_date) {
+      const parsed = new Date(task.due_date);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    if (task.due_time) {
+      const fallback = new Date();
+      const [hours, minutes] = task.due_time.split(":");
+      fallback.setHours(
+        parseInt(hours ?? "0", 10),
+        parseInt(minutes ?? "0", 10),
+        0,
+        0
+      );
+      return fallback;
+    }
+    return null;
+  }, []);
+
+  // Get prompt task for prompt box
+  const promptTask = React.useMemo(() => {
+    if (currentTask) return currentTask;
+    return tasks.find((task) => task.status !== "DONE") || null;
+  }, [currentTask, tasks]);
+
+  // Check if should show prompt box
+  const shouldShowPrompt = React.useMemo(() => {
+    if (!promptTask) return false;
+    const dueDate = getTaskDueDate(promptTask);
+    if (!dueDate) return true;
+    const now = new Date();
+    const leadTimeMs = 15 * 60 * 1000; // 15 minutes before due time
+    return now.getTime() >= dueDate.getTime() - leadTimeMs;
+  }, [promptTask, getTaskDueDate]);
+
+  const promptDisabled = !shouldShowPrompt || !promptTask;
 
   useFocusEffect(
     useCallback(() => {
@@ -221,6 +262,7 @@ export default function HomePage() {
       console.log("Task choice error: ", e);
     } finally {
       setisTaskPressed(true);
+      setIsdoing(choice);
     }
   };
 
@@ -389,24 +431,44 @@ export default function HomePage() {
           ) : (
             <>
               <Text style={takerStyles.taskContext}>
-                Did you {currentTask?.title}
+                {shouldShowPrompt && promptTask
+                  ? `Did you ${promptTask.title}?` // Show prompt task title
+                  : "You're all caught up for now."}
               </Text>
               <View style={takerStyles.showerRow}>
                 <Pressable
+                  disabled={promptDisabled}
                   style={({ pressed }) => [
                     takerStyles.teskchoice,
-                    { backgroundColor: pressed ? "#86cd89ff" : "#66BB6A" },
+                    {
+                      backgroundColor: promptDisabled
+                        ? "#A5D6A7"
+                        : pressed
+                        ? "#86cd89ff"
+                        : "#66BB6A",
+                    },
                   ]}
-                  onPress={() => handleTaskChoice(true, currentTask?.id)}
+                  onPress={() =>
+                    promptTask && handleTaskChoice(true, promptTask.id)
+                  }
                 >
                   <Text style={takerStyles.teskchoiceText}>YES</Text>
                 </Pressable>
                 <Pressable
+                  disabled={promptDisabled}
                   style={({ pressed }) => [
                     takerStyles.teskchoice,
-                    { backgroundColor: pressed ? "#df8989ff" : "#E57373" },
+                    {
+                      backgroundColor: promptDisabled
+                        ? "#f5b5b5"
+                        : pressed
+                        ? "#df8989ff"
+                        : "#E57373",
+                    },
                   ]}
-                  onPress={() => handleTaskChoice(false, currentTask?.id)}
+                  onPress={() =>
+                    promptTask && handleTaskChoice(false, promptTask.id)
+                  }
                 >
                   <Text style={takerStyles.teskchoiceText}>NO</Text>
                 </Pressable>
