@@ -5,6 +5,7 @@ import { takerStyles } from "@/styles/taker.style";
 import { useTaker } from "@/contexts/TakerContexts";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthProvider";
+import { MoodItem } from "@/types/data.type";
 
 const moodColors: Record<string, string> = {
   happy: "#BCE69B",
@@ -20,7 +21,7 @@ const moodemoji: Record<string, string> = {
 };
 
 export default function MoodTracking() {
-  const { todaymood, settodaymood, setIsButtonPress, TODAY_MOOD_KEY } =
+  const { todaymood, settodaymood, setIsButtonPress, MOODTD_STORAGE_KEY } =
     useTaker();
   const {USER_DATA_KEY} = useAuth();
   const handlePress = async (mood: string) => {
@@ -38,10 +39,10 @@ export default function MoodTracking() {
           mood: mood,
           emoji: moodemoji[mood],
         }
-        settodaymood(newMood);
+        settodaymood(newMood as MoodItem);
         
         await AsyncStorage.setItem(
-          TODAY_MOOD_KEY,
+          MOODTD_STORAGE_KEY,
           JSON.stringify({
             today_mood: newMood,
           })
@@ -63,15 +64,14 @@ export default function MoodTracking() {
       );
       
       const tdmoodres = await tdmoodreq.json();
-      if (tdmoodres.ok) {
-        console.log("success: ", tdmoodres.message);
+      if (tdmoodres.success) {
+        console.log("Send TDmoon success: ", tdmoodres.message);
       } else {
-        console.log("Error: ", tdmoodres.error);
+        console.log("Send TDmoon Failed: ", tdmoodres.error);
       }
-      console.log(todaymood);
     }
     } catch (e) {
-      console.log("MoodTracking Error: ", e);
+      console.log("Failed to send to server: ", e);
     } finally {
       setIsButtonPress(true);
       router.back();

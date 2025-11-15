@@ -29,7 +29,6 @@ export default function useTakerReset() {
     setStar,
     tasks,
     setTasks,
-    TAKER_STORAGE_KEY,
   } = useTaker();
   const { USER_DATA_KEY } = useAuth();
   const [username, setUsername] = useState("");
