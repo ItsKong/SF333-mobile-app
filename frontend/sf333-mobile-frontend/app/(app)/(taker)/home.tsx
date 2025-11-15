@@ -30,7 +30,7 @@ import {
  */
 
 export default function HomePage() {
-  const {handleLogout} = useAuth();
+  const { handleLogout } = useAuth();
   const router = useRouter();
   const {
     todaymood,
@@ -43,7 +43,9 @@ export default function HomePage() {
     setStar,
     tasks,
     setTasks,
-    TAKER_STORAGE_KEY,
+    MOOD_STORAGE_KEY,
+    MOODTD_STORAGE_KEY,
+    TASK_STORAGE_KEY,
   } = useTaker();
   const { USER_DATA_KEY } = useAuth();
   const [username, setUsername] = useState("");
@@ -52,7 +54,7 @@ export default function HomePage() {
   const [currentTask, setCurrentTask] = useState<TaskItem | null>(null);
   const [isdoing, setIsdoing] = useState<boolean>(false);
   const [refreshing, setRefreshing] = React.useState(false);
-  const { addMoodColorEmojiIndex, addTaskIndex } = useGiverRefresh();
+  const { addMoodColorEmojiIndex, addTaskIndex , addTDMoodColorEmoji} = useGiverRefresh();
   const {
     checkFrequencyBasedReset,
     checkAndResetTasks,
@@ -152,6 +154,7 @@ export default function HomePage() {
       const getId = await AsyncStorage.getItem(USER_DATA_KEY);
       if (!getId) {
         router.replace("/(auth)/LoginForm");
+        AsyncStorage.clear();
         return;
       }
       const parseID = JSON.parse(getId);
@@ -161,18 +164,48 @@ export default function HomePage() {
       const userMoodreq = await fetch(
         `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${parseID.docId}`
       );
+      const userMoodTDreq = await fetch(
+        `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${parseID.docId}`
+      );
 
       const userTaskData = await userTaskreq.json();
       const userMoodData = await userMoodreq.json();
+      const userMoodTDres = await userMoodTDreq.json();
 
-      if (userTaskData.success && userMoodData.success) {
-        const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
+      if (userTaskData.success && userMoodData.success && userMoodTDres) {
+        const formatMood = addMoodColorEmojiIndex(userMoodData.moods.slide(0, 7));
         const formatTask = addTaskIndex(userTaskData.tasks);
+        const formatTDMood = addTDMoodColorEmoji(userMoodTDres);
+        await AsyncStorage.setItem(
+          TASK_STORAGE_KEY,
+          JSON.stringify({
+            tasks: formatTask,
+          })
+        );
+
+        await AsyncStorage.setItem(
+          MOOD_STORAGE_KEY,
+          JSON.stringify({
+            pastmoods: formatMood,
+          })
+        );
+
+        await AsyncStorage.setItem(
+          MOODTD_STORAGE_KEY,
+          JSON.stringify({
+            todayMood: formatTDMood,
+          })
+        );
+
         setPastMoods(formatMood);
         setTasks(formatTask);
+        settodaymood(formatTDMood)
+      } else {
+        console.log("Error fetching data: ", userTaskData);
       }
     } catch (e) {
       console.log("Refresh Error: ", e);
+      Alert.alert("Error refreshing", `Something wrong. Error: ${e}`);
     }
     setTimeout(() => {
       setRefreshing(false);
@@ -181,6 +214,8 @@ export default function HomePage() {
 
   const handleMoodtracking = () => {
     if (todaymood) {
+      console.log("Today mood: ", todaymood);
+      setIsButtonPress(true);
       null;
     } else {
       router.push("/(app)/(taker)/moodTracking");
@@ -190,10 +225,7 @@ export default function HomePage() {
     try {
       if (choice) {
         // Add star
-        setStar((prev: number[]) => {
-          const newStarCount = prev.length + 1;
-          return Array.from({ length: newStarCount }, (_, i) => i + 1);
-        });
+        setStar(star + 1);
 
         // Update task status
         const updatedTasks = tasks.map((task) =>
@@ -203,7 +235,7 @@ export default function HomePage() {
 
         const taskdata = updatedTasks.find((task) => task.id === taskId);
         const newstar = {
-          stars_point: star.length,
+          stars_point: star + 1,
         };
         // update server
         const taskreq = await fetch(
@@ -281,24 +313,15 @@ export default function HomePage() {
         <Text>Your star:</Text>
         {/* stars go here! */}
         <View style={takerStyles.starRow}>
-          {star.map((star) => (
-            <Text key={star} style={takerStyles.star}>
+          {Array.from({ length: star as any }).map((_, index) => (
+            <Text key={index} style={takerStyles.star}>
               ⭐
             </Text>
           ))}
         </View>
-        {/* <Pressable
-          style={({ pressed }) => [
-            takerStyles.teskchoice,
-            { backgroundColor: pressed ? "#86cd89ff" : "#66BB6A" },
-          ]}
-          onPress={() => handleTaskChoice(false)}
-        >
-          <Text style={takerStyles.teskchoiceText}>back</Text>
-        </Pressable> */}
       </>
     );
-  }; 
+  };
 
   const handleSOS = async () => {
     try {
@@ -380,9 +403,9 @@ export default function HomePage() {
                 </Text>
                 {/* balls go here! */}
                 <View style={takerStyles.moodRow}>
-                  {pastmoods.map((pastmood) => (
+                  {pastmoods.map((pastmood, i) => (
                     <View
-                      key={pastmood.index}
+                      key={i}
                       style={[
                         takerStyles.moodCircle,
                         { backgroundColor: pastmood.color, marginTop: 10 },

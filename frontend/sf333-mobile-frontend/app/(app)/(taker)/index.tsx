@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTaker } from "@/contexts/TakerContexts";
+import useGiverRefresh from "@/hooks/useGiverRefresh";
 
 // FETCHING DATA IN HERE!
 // SEND USERNAME TO GET USER DATA.
@@ -22,7 +23,16 @@ const moodemoji: Record<string, string> = {
 };
 
 export default function AppIndex() {
-  const { setPastMoods, setTasks, setStar, TAKER_STORAGE_KEY } = useTaker();
+  const {
+    setPastMoods,
+    setTasks,
+    setStar,
+    MOOD_STORAGE_KEY,
+    MOODTD_STORAGE_KEY,
+    TASK_STORAGE_KEY,
+    settodaymood,
+  } = useTaker();
+  const { addMoodColorEmojiIndex, addTaskIndex , addTDMoodColorEmoji} = useGiverRefresh();
   const [isLoading, setIsLoading] = useState(true);
   const [minload, setminload] = useState(false);
   const { USER_DATA_KEY } = useAuth();
@@ -31,20 +41,37 @@ export default function AppIndex() {
   useEffect(() => {
     const fetchingUserData = async () => {
       try {
-        const storedData = await AsyncStorage.getItem(TAKER_STORAGE_KEY);
         const userdata = await AsyncStorage.getItem(USER_DATA_KEY);
-        // fetching local is not สบาย for testing so skipy skipy
-        if (storedData) {
-          // Parse and use stored data
-          console.log("Giver loading fix data from storage:", storedData);
-          const parseData = JSON.parse(storedData);
-          setPastMoods(parseData.pastmoods);
-          setTasks(parseData.tasks);
-          setStar(parseData.star);
-        } else if (!userdata) {
+        if (!userdata) {
           router.replace("/(auth)/LoginForm");
           AsyncStorage.clear();
           return;
+        }
+
+        const storedData = await AsyncStorage.multiGet([
+          TASK_STORAGE_KEY,
+          MOODTD_STORAGE_KEY,
+          MOOD_STORAGE_KEY,
+        ]);
+
+        const taskDataString = storedData[0][1];
+        const moodTodayDataString = storedData[1][1];
+        const moodPastDataString = storedData[2][1];
+
+        if (taskDataString && moodTodayDataString && moodPastDataString) {
+          let tasks = [];
+          let todayMood = [];
+          let pastMoods = [];
+          // Parse the JSON strings if they exist
+          const parseUser = JSON.parse(userdata);
+          const star = parseUser.userData.stars_point;
+          tasks = JSON.parse(taskDataString).tasks;
+          todayMood = JSON.parse(moodTodayDataString).todayMood;
+          pastMoods = JSON.parse(moodPastDataString).pastmoods;
+          settodaymood(todayMood)
+          setPastMoods(pastMoods);
+          setTasks(tasks);
+          setStar(star);
         } else {
           const parseUser = JSON.parse(userdata);
           console.log("Inside taker loaded userdata:", parseUser);
@@ -55,106 +82,52 @@ export default function AppIndex() {
           const userMoodreq = await fetch(
             `${process.env.EXPO_PUBLIC_GET_MOODDATA_BYUSER}/${docId}`
           );
-
+          const userMoodTDreq = await fetch(
+            `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${docId}`
+          );
+          console.log(
+            "API path: ",
+            `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${docId}`
+          );
           const userTaskData = await userTaskreq.json();
           const userMoodData = await userMoodreq.json();
-          const star = parseUser.userData.stars_point;
-          console.log("userTask", userTaskData);
-          console.log("userMood", userMoodData);
-          console.log("star", star);
+          const userMoodTDres = await userMoodTDreq.json();
+          // console.log("userTask", userTaskData);
+          // console.log("userMood", userMoodData);
+          if (userMoodTDres.success) {
+            console.log(userMoodTDres.moods);
+          } else {
+            console.log(userMoodTDres.error);
+          }
 
-          const withColor = userMoodData.moods.map((item: any) => ({
-            ...item,
-            color: moodColors[item.mood],
-          }));
+          const taskwithIndexNum = addTaskIndex(userTaskData.tasks);
+          const moodwithColorEmojiIndex = addMoodColorEmojiIndex(userMoodData.moods.slide(0, 7));
+          const today_mood = addTDMoodColorEmoji(userMoodTDres);
 
-          await AsyncStorage.setItem(
-            TAKER_STORAGE_KEY,
+           await AsyncStorage.setItem(
+            TASK_STORAGE_KEY,
             JSON.stringify({
-              pastmoods: withColor,
-              tasks: userTaskData.tasks,
-              star: star,
+              tasks: taskwithIndexNum,
             })
           );
 
-          setPastMoods(withColor);
-          setTasks(userTaskData.tasks);
-          setStar(star);
+          await AsyncStorage.setItem(
+            MOOD_STORAGE_KEY,
+            JSON.stringify({
+              pastmoods: moodwithColorEmojiIndex,
+            })
+          );
 
-          //===========================================================
-          // const mooddata = [
-          //   { date: 1, mood: "happy" },
-          //   { date: 2, mood: "sad" },
-          //   { date: 3, mood: "angry" },
-          //   { date: 4, mood: "happy" },
-          //   { date: 5, mood: "sad" },
-          //   { date: 6, mood: "angry" },
-          //   { date: 7, mood: "angry" },
-          // ];
+          await AsyncStorage.setItem(
+            MOODTD_STORAGE_KEY,
+            JSON.stringify({
+              todayMood: today_mood,
+            })
+          );
 
-          // const initialTasks: TaskItem[] = [
-          //   {
-          //     id: "1",
-          //     title: "Take a shower",
-          //     date: "1 Nov 2025",
-          //     due_time: "08:00",
-          //     frequency: "everyday",
-          //     status: "DONE",
-          //   },
-          //   {
-          //     id: "2",
-          //     title: "Have a lunch",
-          //     date: "15/09/25",
-          //     due_time: "08:15",
-          //     frequency: "everyday",
-          //     status: "DONE",
-          //   },
-          //   {
-          //     id: "3",
-          //     title: "Brush teeth",
-          //     date: "15/09/25",
-          //     due_time: "08:30",
-          //     frequency: "weekly",
-          //     status: "DONE",
-          //   },
-          //   {
-          //     id: "4",
-          //     title: "Meet friends",
-          //     date: "15/09/25",
-          //     due_time: "01:30",
-          //     frequency: "weekly",
-          //     status: "DONE",
-          //   },
-          //   {
-          //     id: "5",
-          //     title: "Meet friends",
-          //     date: "15/09/25",
-          //     due_time: "01:30",
-          //     frequency: "weekly",
-          //     status: "MISSED",
-          //   },
-          // ];
-
-          // const stardata = 3;
-          // const starArr = Array.from({ length: stardata }, (_, i) => i + 1);
-
-          // const withColor = userMood.map((item) => ({
-          //   ...item,
-          //   color: moodColors[item.mood],
-          // }));
-
-          // await AsyncStorage.setItem(
-          //   TAKER_STORAGE_KEY,
-          //   JSON.stringify({
-          //     pastmoods: withColor,
-          //     tasks: initialTasks,
-          //     star: starArr,
-          //   })
-          // );
-
-          // setPastMoods(withColor);
-          // setTasks(initialTasks);
-          // setStar(starArr);
+          setPastMoods(moodwithColorEmojiIndex);
+          setTasks(taskwithIndexNum);
+          setStar(today_mood);
         }
       } catch (error) {
         console.error("Failed to load data:", error);

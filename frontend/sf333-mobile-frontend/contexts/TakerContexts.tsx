@@ -8,13 +8,14 @@ interface TakerContextType {
   pastmoods: MoodItem[];
   setPastMoods: (value: MoodItem[]) => void;
   isButtonPress: boolean;
-  star: number[]
-  setStar: (star: number[] | ((prev: number[]) => number[])) => void;
+  star: number
+  setStar: (star: number ) => void;
   tasks: TaskItem[]
   setTasks: (value: TaskItem[]) => void;
   setIsButtonPress: (value: boolean) => void;
-  TAKER_STORAGE_KEY: string;
-  TODAY_MOOD_KEY: string
+  TASK_STORAGE_KEY: string;
+  MOOD_STORAGE_KEY: string;
+  MOODTD_STORAGE_KEY: string;
 }
 
 const TakerContext = createContext<TakerContextType | undefined>(undefined);
@@ -24,10 +25,11 @@ export const TakerProvider = ({ children }: { children: ReactNode }) => {
   const [date, setDate] = useState(0);
   const [isButtonPress, setIsButtonPress] = useState(false);
   const [pastmoods, setPastMoods] = useState<MoodItem[]>([]);
-  const [star, setStar] = useState<number[]>([]);
+  const [star, setStar] = useState<number>(0);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
-  const TAKER_STORAGE_KEY = '@care_taker';
-  const TODAY_MOOD_KEY = '@today_mood'
+  const TASK_STORAGE_KEY = "@task_care_giver";
+  const MOOD_STORAGE_KEY = "@mood_care_giver";
+  const MOODTD_STORAGE_KEY = "@moodtd_care_giver";
 
   return (
     <TakerContext.Provider
@@ -42,8 +44,9 @@ export const TakerProvider = ({ children }: { children: ReactNode }) => {
         setStar,
         tasks,
         setTasks,
-        TAKER_STORAGE_KEY,
-        TODAY_MOOD_KEY,
+        MOOD_STORAGE_KEY,
+        MOODTD_STORAGE_KEY,
+        TASK_STORAGE_KEY,
       }}
     >
       {children}
