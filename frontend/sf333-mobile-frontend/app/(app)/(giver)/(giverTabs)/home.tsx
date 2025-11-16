@@ -78,7 +78,7 @@ export default function GiverHome() {
       const userMoodTDres = await userMoodTDreq.json();
 
       if (userTaskData.success && userMoodData.success && userMoodTDres) {
-        const formatMood = addMoodColorEmojiIndex(userMoodData.moods);
+        const formatMood = addMoodColorEmojiIndex(userMoodData.moods.slice(0, 7));
         const formatTask = addTaskIndex(userTaskData.tasks);
         const formatTDMood = addTDMoodColorEmoji(userMoodTDres);
         await AsyncStorage.setItem(

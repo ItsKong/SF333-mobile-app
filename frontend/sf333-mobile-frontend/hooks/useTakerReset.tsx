@@ -18,7 +18,6 @@ export default function useTakerReset() {
     setStar,
     tasks,
     setTasks,
-    TAKER_STORAGE_KEY,
     MOODTD_STORAGE_KEY,
   } = useTaker();
   const { USER_DATA_KEY } = useAuth();

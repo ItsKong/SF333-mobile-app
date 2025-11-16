@@ -95,13 +95,13 @@ export default function AppIndex() {
           // console.log("userTask", userTaskData);
           // console.log("userMood", userMoodData);
           if (userMoodTDres.success) {
-            console.log(userMoodTDres.moods);
+            console.log(userMoodTDres.message);
           } else {
             console.log(userMoodTDres.error);
           }
 
           const taskwithIndexNum = addTaskIndex(userTaskData.tasks);
-          const moodwithColorEmojiIndex = addMoodColorEmojiIndex(userMoodData.moods.slide(0, 7));
+          const moodwithColorEmojiIndex = addMoodColorEmojiIndex(userMoodData.moods.slice(0, 7));
           const today_mood = addTDMoodColorEmoji(userMoodTDres);
 
            await AsyncStorage.setItem(
@@ -124,10 +124,12 @@ export default function AppIndex() {
               todayMood: today_mood,
             })
           );
+          console.log("today_mood", today_mood)
 
           setPastMoods(moodwithColorEmojiIndex);
           setTasks(taskwithIndexNum);
-          setStar(today_mood);
+          setStar(parseUser.userData.stars_point);
+          settodaymood(today_mood);
         }
       } catch (error) {
         console.error("Failed to load data:", error);

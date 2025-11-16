@@ -135,7 +135,7 @@ export default function AppIndex() {
             }
           );
 
-          const moodwithColorEmojiIndex = userMoodData.moods.map(
+          const moodwithColorEmojiIndex = userMoodData.moods.slice(0, 7).map(
             (item: any, index: number) => {
               if (item.due_date && item.due_date._seconds !== undefined) {
                 const firebasetime = item.due_date;

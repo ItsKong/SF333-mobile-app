@@ -54,7 +54,8 @@ export default function HomePage() {
   const [currentTask, setCurrentTask] = useState<TaskItem | null>(null);
   const [isdoing, setIsdoing] = useState<boolean>(false);
   const [refreshing, setRefreshing] = React.useState(false);
-  const { addMoodColorEmojiIndex, addTaskIndex , addTDMoodColorEmoji} = useGiverRefresh();
+  const { addMoodColorEmojiIndex, addTaskIndex, addTDMoodColorEmoji } =
+    useGiverRefresh();
   const {
     checkFrequencyBasedReset,
     checkAndResetTasks,
@@ -79,7 +80,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [findCurrentTask]);
 
-  // Get task due date
+  // Get task due date --
   const getTaskDueDate = useCallback((task: TaskItem | null) => {
     if (!task) return null;
     if (task.due_date) {
@@ -139,13 +140,13 @@ export default function HomePage() {
     }, [])
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      checkAndResetMood();
-      checkAndResetTasks();
-      checkFrequencyBasedReset();
-    }, [checkAndResetMood, checkAndResetTasks, checkFrequencyBasedReset])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     checkAndResetMood();
+  //     checkAndResetTasks();
+  //     checkFrequencyBasedReset();
+  //   }, [checkAndResetMood, checkAndResetTasks, checkFrequencyBasedReset])
+  // );
 
   const onRefresh = React.useCallback(async () => {
     // fetch server
@@ -173,7 +174,9 @@ export default function HomePage() {
       const userMoodTDres = await userMoodTDreq.json();
 
       if (userTaskData.success && userMoodData.success && userMoodTDres) {
-        const formatMood = addMoodColorEmojiIndex(userMoodData.moods.slide(0, 7));
+        const formatMood = addMoodColorEmojiIndex(
+          userMoodData.moods.slice(0, 7)
+        );
         const formatTask = addTaskIndex(userTaskData.tasks);
         const formatTDMood = addTDMoodColorEmoji(userMoodTDres);
         await AsyncStorage.setItem(
@@ -196,10 +199,11 @@ export default function HomePage() {
             todayMood: formatTDMood,
           })
         );
-
+        console.log(parseID.userData.stars_point);
         setPastMoods(formatMood);
         setTasks(formatTask);
-        settodaymood(formatTDMood)
+        settodaymood(formatTDMood);
+        setStar(parseID.userData.stars_point);
       } else {
         console.log("Error fetching data: ", userTaskData);
       }
@@ -225,8 +229,9 @@ export default function HomePage() {
     try {
       if (choice) {
         // Add star
-        setStar(star + 1);
-
+        const newTotalStars = star + 1;
+        setStar(newTotalStars);
+        console.log("newTotalStars", newTotalStars)
         // Update task status
         const updatedTasks = tasks.map((task) =>
           task.id === taskId ? { ...task, status: "DONE" } : task
@@ -234,8 +239,8 @@ export default function HomePage() {
         setTasks(updatedTasks);
 
         const taskdata = updatedTasks.find((task) => task.id === taskId);
-        const newstar = {
-          stars_point: star + 1,
+        const newstarPayload = {
+          stars_point: newTotalStars, // 👈 Send the number we calculated
         };
         // update server
         const taskreq = await fetch(
@@ -251,21 +256,21 @@ export default function HomePage() {
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newstar),
+            body: JSON.stringify(newstarPayload),
           }
         );
         const taskres = await taskreq.json();
         const starres = await starreq.json();
         if (taskres.success) {
-          console.log(taskres.message);
+          console.log("Server task send success: ", taskres.message);
         } else {
-          console.log(taskres.error);
+          console.log("Server task send failed: ", taskres.error);
         }
 
         if (starres.success) {
-          console.log(starres.message);
+          console.log("Server star send success: ", starres.message);
         } else {
-          console.log(starres.error);
+          console.log("Server star send failed: ", starres.error);
         }
       } else {
         // Seleted NO
@@ -286,13 +291,13 @@ export default function HomePage() {
         );
         const taskres = await taskreq.json();
         if (taskres.success) {
-          console.log(taskres.message);
+          console.log("Server success", taskres.message);
         } else {
-          console.log(taskres.error);
+          console.log("Server error:", taskres.error);
         }
       }
     } catch (e) {
-      console.log("Task choice error: ", e);
+      console.log("Fail to send task to server: ", e);
     } finally {
       setisTaskPressed(true);
       setIsdoing(choice);

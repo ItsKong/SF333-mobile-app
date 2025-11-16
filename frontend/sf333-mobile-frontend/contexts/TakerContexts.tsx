@@ -4,12 +4,12 @@ import { TaskItem, MoodItem } from "@/types/data.type";
 
 interface TakerContextType {
   todaymood: MoodItem | null;
-  settodaymood: (value: MoodItem | null) => void;
+  settodaymood: (value: MoodItem) => void;
   pastmoods: MoodItem[];
   setPastMoods: (value: MoodItem[]) => void;
   isButtonPress: boolean;
   star: number
-  setStar: (star: number ) => void;
+  setStar: (star: number | ((prev: number) => number)) => void;
   tasks: TaskItem[]
   setTasks: (value: TaskItem[]) => void;
   setIsButtonPress: (value: boolean) => void;
