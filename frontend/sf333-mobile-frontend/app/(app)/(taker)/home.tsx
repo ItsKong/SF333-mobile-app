@@ -54,6 +54,7 @@ export default function HomePage() {
   const [isTaskPressed, setisTaskPressed] = useState(false);
   const [currentTask, setCurrentTask] = useState<TaskItem | null>(null);
   const [isdoing, setIsdoing] = useState<boolean>(false);
+  const [isSOSLoading, setIsSOSLoading] = useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const { addMoodColorEmojiIndex, addTaskIndex, addTDMoodColorEmoji } =
     useGiverRefresh();
@@ -196,10 +197,10 @@ export default function HomePage() {
       const userTaskData = await userTaskreq.json();
       const userMoodData = await userMoodreq.json();
       const userMoodTDres = await userMoodTDreq.json();
-      console.log(userMoodTDres.moods.length)
+      console.log(userMoodTDres.moods.length);
 
       const hastomood = userMoodTDres.moods.length > 0;
-      console.log("refresh hastomood: ",hastomood)
+      console.log("refresh hastomood: ", hastomood);
       if (hastomood) {
         const formatTDMood = addTDMoodColorEmoji(userMoodTDres);
         await AsyncStorage.setItem(
@@ -218,7 +219,7 @@ export default function HomePage() {
 
         settodaymood(formatTDMood);
       } else {
-        console.log("hastomood is 0. set todaymood to null." )
+        console.log("hastomood is 0. set todaymood to null.");
         settodaymood(null as any);
       }
       if (userTaskData.success && userMoodData.success) {
@@ -370,6 +371,11 @@ export default function HomePage() {
   };
 
   const handleSOS = async () => {
+    // 1. Prevent Spamming: If already loading, stop immediately
+    if (isSOSLoading) return;
+
+    // 2. Lock the button and start process
+    setIsSOSLoading(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
 
@@ -387,7 +393,7 @@ export default function HomePage() {
       });
 
       const { latitude, longitude } = location.coords;
-      const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
 
       const sosreq = await fetch(`${process.env.EXPO_PUBLIC_POST_SOS}`, {
         method: "POST",
@@ -413,6 +419,8 @@ export default function HomePage() {
     } catch (e) {
       console.log("SOS error: ", e);
       Alert.alert("SOS Error", `Could not send emergency alert: ${e}`);
+    } finally {
+      setIsSOSLoading(false);
     }
   };
 
@@ -554,8 +562,18 @@ export default function HomePage() {
 
       <View style={takerStyles.sosContainer}>
         <View style={takerStyles.leftspacer} />
-        <Pressable style={takerStyles.sosButton} onPress={() => handleSOS()}>
-          <Text style={takerStyles.sosText}>SOS</Text>
+        <Pressable
+          style={[
+            takerStyles.sosButton,
+            // Optional: Dim the button when loading so they know it's disabled
+            isSOSLoading && { opacity: 0.6, backgroundColor: "#F56C6C" },
+          ]}
+          onPress={() => handleSOS()}
+          disabled={isSOSLoading} // 👈 Physical disable to prevent clicks
+        >
+          <Text style={takerStyles.sosText}>
+            SOS
+          </Text>
         </Pressable>
         <Pressable
           style={takerStyles.logoutButton}

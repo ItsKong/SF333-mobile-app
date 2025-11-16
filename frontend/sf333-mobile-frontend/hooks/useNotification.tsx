@@ -4,7 +4,9 @@ import {
   getToken,
   requestPermission,
 } from "@react-native-firebase/messaging";
-import { PermissionsAndroid, Platform } from "react-native";
+import { useEffect } from "react";
+import { PermissionsAndroid, Platform, Linking } from "react-native";
+import * as Notifications from 'expo-notifications';
 
 // 1. Get the Messaging Instance
 const messaging = getMessaging();
@@ -91,4 +93,21 @@ export async function removeTokenFromBackend(userId: any) {
   } catch (error) {
     console.error("Failed to remove token:", error);
   }
+}
+
+export default function useNotificationObserver() {
+  useEffect(() => {
+    // This listener fires when a user TAPS the notification
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      
+      // Check if the backend sent a 'mapLink'
+      if (data && data.mapLink) {
+        // Open Google Maps immediately
+        Linking.openURL(data.mapLink as any);
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 }

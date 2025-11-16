@@ -2,9 +2,10 @@ import { SplashScreen, Stack, useRouter } from "expo-router";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import { AuthProvider } from "@/contexts/AuthProvider";
-
+import useNotificationObserver from "@/hooks/useNotification";
 
 export default function RootLayout() {
+  useNotificationObserver()
   const [loaded] = useFonts({
     SpaceMono: require('@/assets/fonts/SpaceMono-Regular.ttf'),
     Inconsolata_Light: require('@/assets/fonts/Inconsolata_Expanded-Light.ttf')
