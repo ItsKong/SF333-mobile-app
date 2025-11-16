@@ -1,20 +1,9 @@
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { takerStyles } from "@/styles/taker.style";
-import { useTaker } from "@/contexts/TakerContexts";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/contexts/AuthProvider";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useTaker } from "@/contexts/TakerContexts";
 import useGiverRefresh from "@/hooks/useGiverRefresh";
-import { MoodItem } from "@/types/data.type";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 
 export default function useTakerReset() {
   const router = useRouter();
@@ -29,6 +18,7 @@ export default function useTakerReset() {
     setStar,
     tasks,
     setTasks,
+    MOODTD_STORAGE_KEY,
   } = useTaker();
   const { USER_DATA_KEY } = useAuth();
   const [username, setUsername] = useState("");
@@ -57,6 +47,9 @@ export default function useTakerReset() {
         setIsButtonPress(false);
         settodaymood(null as any);
 
+        // Clear todaymood from AsyncStorage
+        await AsyncStorage.removeItem(MOODTD_STORAGE_KEY);
+
         // Save the reset timestamp
         await AsyncStorage.setItem(
           LAST_MOOD_RESET_KEY,
@@ -66,7 +59,7 @@ export default function useTakerReset() {
     } catch (error) {
       console.log("Error checking mood reset:", error);
     }
-  }, []);
+  }, [MOODTD_STORAGE_KEY]);
 
   /**
    * Check and reset tasks based on due_time
