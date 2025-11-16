@@ -16,6 +16,8 @@ interface TakerContextType {
   TASK_STORAGE_KEY: string;
   MOOD_STORAGE_KEY: string;
   MOODTD_STORAGE_KEY: string;
+  LAST_MOOD_RESET_KEY: string;
+  LAST_TASK_CHECK_KEY: string;
 }
 
 const TakerContext = createContext<TakerContextType | undefined>(undefined);
@@ -30,6 +32,8 @@ export const TakerProvider = ({ children }: { children: ReactNode }) => {
   const TASK_STORAGE_KEY = "@task_care_giver";
   const MOOD_STORAGE_KEY = "@mood_care_giver";
   const MOODTD_STORAGE_KEY = "@moodtd_care_giver";
+  const LAST_MOOD_RESET_KEY = "@last_mood_reset";
+  const LAST_TASK_CHECK_KEY = "@last_task_check";
 
   return (
     <TakerContext.Provider
@@ -47,6 +51,8 @@ export const TakerProvider = ({ children }: { children: ReactNode }) => {
         MOOD_STORAGE_KEY,
         MOODTD_STORAGE_KEY,
         TASK_STORAGE_KEY,
+        LAST_MOOD_RESET_KEY,
+        LAST_TASK_CHECK_KEY,
       }}
     >
       {children}

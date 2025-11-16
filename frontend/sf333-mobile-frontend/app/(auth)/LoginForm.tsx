@@ -137,11 +137,11 @@ export default function LoginForm() {
               Create an Account
             </Text>
           </Pressable>
-          <Pressable onPress={() => handleLogin("forgot")}>
+          {/* <Pressable onPress={() => handleLogin("forgot")}>
             <Text style={loginStyles.loginSideButtonText}>
               Forgot Password?
             </Text>
-          </Pressable>
+          </Pressable> */}
         </View>
       </Animated.View>
     </View>

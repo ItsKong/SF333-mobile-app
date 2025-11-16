@@ -26,8 +26,8 @@ export default function useTakerReset() {
   const [isdoing, setIsdoing] = useState<boolean>(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const { addMoodColorEmojiIndex, addTaskIndex } = useGiverRefresh();
-  const LAST_MOOD_RESET_KEY = "@last_mood_reset";
-  const LAST_TASK_CHECK_KEY = "@last_task_check";
+  const {LAST_MOOD_RESET_KEY, LAST_TASK_CHECK_KEY} = useTaker();
+ 
 
   /**
    * Check if we need to reset mood tracking (daily at midnight)

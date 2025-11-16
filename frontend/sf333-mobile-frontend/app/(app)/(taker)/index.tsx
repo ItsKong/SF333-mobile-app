@@ -31,8 +31,10 @@ export default function AppIndex() {
     MOODTD_STORAGE_KEY,
     TASK_STORAGE_KEY,
     settodaymood,
+    LAST_MOOD_RESET_KEY,
   } = useTaker();
-  const { addMoodColorEmojiIndex, addTaskIndex , addTDMoodColorEmoji} = useGiverRefresh();
+  const { addMoodColorEmojiIndex, addTaskIndex, addTDMoodColorEmoji } =
+    useGiverRefresh();
   const [isLoading, setIsLoading] = useState(true);
   const [minload, setminload] = useState(false);
   const { USER_DATA_KEY } = useAuth();
@@ -68,7 +70,7 @@ export default function AppIndex() {
           tasks = JSON.parse(taskDataString).tasks;
           todayMood = JSON.parse(moodTodayDataString).todayMood;
           pastMoods = JSON.parse(moodPastDataString).pastmoods;
-          settodaymood(todayMood)
+          settodaymood(todayMood);
           setPastMoods(pastMoods);
           setTasks(tasks);
           setStar(star);
@@ -91,17 +93,38 @@ export default function AppIndex() {
           const userMoodTDres = await userMoodTDreq.json();
           // console.log("userTask", userTaskData);
           // console.log("userMood", userMoodData);
-          if (userMoodTDres.success) {
-            console.log(userMoodTDres.message);
+          // if (userMoodTDres.success) {
+          //   console.log("userMoodTDres.message", userMoodTDres);
+          // } else {
+          //   console.log(userMoodTDres.error);
+          // }
+          const hastdmood = userMoodTDres.moods.length > 0;
+          console.log("hastdmood", hastdmood);
+          if (hastdmood) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            await AsyncStorage.setItem(
+              LAST_MOOD_RESET_KEY,
+              today.getTime().toString()
+            );
+            const today_mood = addTDMoodColorEmoji(userMoodTDres);
+            console.log("today_mood", today_mood);
+            settodaymood(today_mood);
+            await AsyncStorage.setItem(
+              MOODTD_STORAGE_KEY,
+              JSON.stringify({
+                todayMood: today_mood,
+              })
+            );
           } else {
-            console.log(userMoodTDres.error);
+            settodaymood(null as any);
           }
-
           const taskwithIndexNum = addTaskIndex(userTaskData.tasks);
-          const moodwithColorEmojiIndex = addMoodColorEmojiIndex(userMoodData.moods.slice(0, 7));
-          const today_mood = addTDMoodColorEmoji(userMoodTDres);
+          const moodwithColorEmojiIndex = addMoodColorEmojiIndex(
+            userMoodData.moods.slice(0, 7)
+          );
 
-           await AsyncStorage.setItem(
+          await AsyncStorage.setItem(
             TASK_STORAGE_KEY,
             JSON.stringify({
               tasks: taskwithIndexNum,
@@ -115,18 +138,9 @@ export default function AppIndex() {
             })
           );
 
-          await AsyncStorage.setItem(
-            MOODTD_STORAGE_KEY,
-            JSON.stringify({
-              todayMood: today_mood,
-            })
-          );
-          console.log("today_mood", today_mood)
-
           setPastMoods(moodwithColorEmojiIndex);
           setTasks(taskwithIndexNum);
           setStar(parseUser.userData.stars_point);
-          settodaymood(today_mood);
         }
       } catch (error) {
         console.error("Failed to load data:", error);

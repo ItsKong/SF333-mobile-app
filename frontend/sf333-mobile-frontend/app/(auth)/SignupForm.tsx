@@ -356,7 +356,7 @@ export default function SignupForm() {
       <View>
         <Text style={{ fontSize: 16, marginTop: 20 }}>
           By signing up, I agree to Fantistic’s{" "}
-          <Link href={"https://www.youtube.com/"}>
+          <Link href={"https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"}>
             <Text style={{ color: "#1261B1" }}>Term Of Service</Text>
           </Link>
         </Text>

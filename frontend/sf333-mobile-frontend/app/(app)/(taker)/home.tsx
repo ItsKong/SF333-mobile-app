@@ -46,6 +46,7 @@ export default function HomePage() {
     MOOD_STORAGE_KEY,
     MOODTD_STORAGE_KEY,
     TASK_STORAGE_KEY,
+    LAST_MOOD_RESET_KEY,
   } = useTaker();
   const { USER_DATA_KEY } = useAuth();
   const [username, setUsername] = useState("");
@@ -63,9 +64,33 @@ export default function HomePage() {
     findCurrentTask,
   } = useTakerReset();
 
+  useEffect(() => {
+    // If todaymood has data, button is pressed (True)
+    // If todaymood is null/undefined, button is not pressed (False)
+    if (todaymood) {
+      console.log("Hi im not null");
+      setIsButtonPress(true);
+    } else {
+      console.log("Hi im null");
+      setIsButtonPress(false);
+    }
+  }, [todaymood]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const runResets = async () => {
+        await checkAndResetMood(); // Checks date, if new day -> sets todaymood null
+        await checkAndResetTasks();
+        await checkFrequencyBasedReset();
+      };
+      runResets();
+    }, [])
+  );
+
   /**
    * Update current task periodically
    */
+
   useEffect(() => {
     const updateCurrentTask = () => {
       const task = findCurrentTask();
@@ -168,17 +193,39 @@ export default function HomePage() {
       const userMoodTDreq = await fetch(
         `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${parseID.docId}`
       );
-
       const userTaskData = await userTaskreq.json();
       const userMoodData = await userMoodreq.json();
       const userMoodTDres = await userMoodTDreq.json();
+      console.log(userMoodTDres.moods.length)
 
-      if (userTaskData.success && userMoodData.success && userMoodTDres) {
+      const hastomood = userMoodTDres.moods.length > 0;
+      console.log("refresh hastomood: ",hastomood)
+      if (hastomood) {
+        const formatTDMood = addTDMoodColorEmoji(userMoodTDres);
+        await AsyncStorage.setItem(
+          MOODTD_STORAGE_KEY,
+          JSON.stringify({
+            todayMood: formatTDMood,
+          })
+        );
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        await AsyncStorage.setItem(
+          LAST_MOOD_RESET_KEY,
+          today.getTime().toString()
+        );
+
+        settodaymood(formatTDMood);
+      } else {
+        console.log("hastomood is 0. set todaymood to null." )
+        settodaymood(null as any);
+      }
+      if (userTaskData.success && userMoodData.success) {
         const formatMood = addMoodColorEmojiIndex(
           userMoodData.moods.slice(0, 7)
         );
         const formatTask = addTaskIndex(userTaskData.tasks);
-        const formatTDMood = addTDMoodColorEmoji(userMoodTDres);
         await AsyncStorage.setItem(
           TASK_STORAGE_KEY,
           JSON.stringify({
@@ -192,17 +239,9 @@ export default function HomePage() {
             pastmoods: formatMood,
           })
         );
-
-        await AsyncStorage.setItem(
-          MOODTD_STORAGE_KEY,
-          JSON.stringify({
-            todayMood: formatTDMood,
-          })
-        );
         console.log(parseID.userData.stars_point);
         setPastMoods(formatMood);
         setTasks(formatTask);
-        settodaymood(formatTDMood);
         setStar(parseID.userData.stars_point);
       } else {
         console.log("Error fetching data: ", userTaskData);
@@ -210,6 +249,8 @@ export default function HomePage() {
     } catch (e) {
       console.log("Refresh Error: ", e);
       Alert.alert("Error refreshing", `Something wrong. Error: ${e}`);
+    } finally {
+      setRefreshing(false);
     }
     setTimeout(() => {
       setRefreshing(false);
@@ -231,7 +272,7 @@ export default function HomePage() {
         // Add star
         const newTotalStars = star + 1;
         setStar(newTotalStars);
-        console.log("newTotalStars", newTotalStars)
+        console.log("newTotalStars", newTotalStars);
         // Update task status
         const updatedTasks = tasks.map((task) =>
           task.id === taskId ? { ...task, status: "DONE" } : task

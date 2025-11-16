@@ -35,8 +35,9 @@ export default function Dashboard() {
     pastMoods,
     tasks,
     TASK_STORAGE_KEY,
-    MOOD_STORAGE_KEY,
-    MOODTD_STORAGE_KEY,
+    ALL_PAST_MOOD_KEY,
+    allpm,
+    setAllpm,
     setPastMoods,
     setTasks,
   } = useGiver();
@@ -78,13 +79,12 @@ export default function Dashboard() {
         );
 
         await AsyncStorage.setItem(
-          MOOD_STORAGE_KEY,
+          ALL_PAST_MOOD_KEY,
           JSON.stringify({
-            pastmoods: formatMood,
+            allpm: formatMood,
           })
         );
-
-        setPastMoods(formatMood);
+        setAllpm(formatMood);
         setTasks(formatTask);
       } else {
         console.log("Error fetching data: ", userTaskData);
@@ -143,7 +143,9 @@ export default function Dashboard() {
         {tasks.map((item, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.taskText, { flex: 2 }]}>{item.title}</Text>
-            <Text style={[styles.dateText, { flex: 1 }]}>{item.due_date}</Text>
+            <Text style={[styles.dateText, { flex: 1 }]}>
+              {item?.due_date ? item.due_date.slice(0, 10) : "No date"}
+              </Text>
             <Text
               style={[
                 styles.statusText,
@@ -166,14 +168,14 @@ export default function Dashboard() {
           <Text style={[styles.tableHeaderText, { flex: 1 }]}>Date</Text>
         </View>
 
-        {pastMoods.map((item, index) => (
+        {allpm.map((item, index) => (
           <View key={index} style={styles.tableRow}>
             {/* <MoodIndicator mood={item.mood} /> */}
             <View style={styles.moodIndicator}>
               <Text style={styles.moodEmoji}>{item.emoji}</Text>
             </View>
             <Text style={[styles.dateText, { flex: 1 }]}>
-              {"Fuck you react"};
+              {item?.record_time ? item.record_time.toString().slice(0, 10) as string: "No date"}
             </Text>
           </View>
         ))}

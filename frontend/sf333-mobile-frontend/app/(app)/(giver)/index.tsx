@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useGiver } from "@/contexts/GiverContexts";
 import { MoodItem } from "@/types/data.type";
+import useGiverRefresh from "@/hooks/useGiverRefresh";
 
 // FETCHING DATA IN HERE!
 // SEND USERNAME TO GET USER DATA.
@@ -32,7 +33,9 @@ export default function AppIndex() {
     TASK_STORAGE_KEY,
     MOOD_STORAGE_KEY,
     MOODTD_STORAGE_KEY,
+    setAllpm,
   } = useGiver();
+  const { addMoodColorEmojiIndex } = useGiverRefresh();
   const { USER_DATA_KEY } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [minload, setminload] = useState(false);
@@ -68,9 +71,9 @@ export default function AppIndex() {
           tasks = JSON.parse(taskDataString).tasks;
           todayMood = JSON.parse(moodTodayDataString).todayMood;
           pastMoods = JSON.parse(moodPastDataString).pastmoods;
-          console.log("Tasks:", tasks);
-          console.log("Today's Mood:", todayMood);
-          console.log("Past Moods:", pastMoods);
+          // console.log("Tasks:", tasks);
+          // console.log("Today's Mood:", todayMood);
+          // console.log("Past Moods:", pastMoods);
           setPastMoods(pastMoods);
           setTasks(tasks);
         } else if (!userdata) {
@@ -131,37 +134,8 @@ export default function AppIndex() {
             }
           );
 
-          const moodwithColorEmojiIndex = userMoodData.moods.slice(0, 7).map(
-            (item: any, index: number) => {
-              if (item.due_date && item.due_date._seconds !== undefined) {
-                const firebasetime = item.due_date;
-                // console.log("firebasetime", firebasetime);
-                const milliseconds =
-                  firebasetime._seconds * 1000 +
-                  firebasetime._nanoseconds / 1000000;
-                const dateObject = new Date(milliseconds);
-                console.log(
-                  "dateObject",
-                  dateObject,
-                  "Due time: ",
-                  item.due_time
-                );
-                return {
-                  ...item,
-                  index: index + 1,
-                  color: moodColors[item.mood],
-                  emoji: moodemoji[item.mood],
-                  due_date: dateObject,
-                };
-              }
-              return {
-                ...item,
-                color: moodColors[item.mood],
-                emoji: moodemoji[item.mood],
-                index: index + 1,
-              };
-            }
-          );
+          const moodwithColorEmojiIndex = addMoodColorEmojiIndex(userMoodData.moods.slice(0, 7))
+          const allpmmood = addMoodColorEmojiIndex(userMoodData.moods);
 
           // console.log("moodwithColorEmojiIndex: ", moodwithColorEmojiIndex)
           console.log("today_mood", today_mood);
@@ -189,6 +163,7 @@ export default function AppIndex() {
           setPastMoods(moodwithColorEmojiIndex);
           setTasks(taskwithIndexNum);
           setTodayMood(today_mood);
+          setAllpm(allpmmood)
         }
       } catch (error) {
         console.error("Failed to load data:", error);

@@ -21,16 +21,21 @@ const moodemoji: Record<string, string> = {
 };
 
 export default function MoodTracking() {
-  const { todaymood, settodaymood, setIsButtonPress, MOODTD_STORAGE_KEY } =
-    useTaker();
-  const {USER_DATA_KEY} = useAuth();
+  const {
+    todaymood,
+    settodaymood,
+    setIsButtonPress,
+    MOODTD_STORAGE_KEY,
+    LAST_MOOD_RESET_KEY,
+  } = useTaker();
+  const { USER_DATA_KEY } = useAuth();
   const handlePress = async (mood: string) => {
     try {
       const userstorage = await AsyncStorage.getItem(USER_DATA_KEY);
       if (!userstorage) {
-         router.replace("/(auth)/LoginForm");
-          AsyncStorage.clear();
-          return;
+        router.replace("/(auth)/LoginForm");
+        AsyncStorage.clear();
+        return;
       } else {
         const parseuser = await JSON.parse(userstorage);
         const newMood = {
@@ -38,38 +43,45 @@ export default function MoodTracking() {
           date: new Date(),
           mood: mood,
           emoji: moodemoji[mood],
-        }
+        };
         settodaymood(newMood as MoodItem);
-        
+
         await AsyncStorage.setItem(
           MOODTD_STORAGE_KEY,
           JSON.stringify({
             today_mood: newMood,
           })
         );
-        
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        await AsyncStorage.setItem(
+          LAST_MOOD_RESET_KEY,
+          today.getTime().toString()
+        );
+
         const moodform = {
           mood: mood,
           record_by: parseuser.docId,
           record_time: new Date(),
         };
-        
+
         const tdmoodreq = await fetch(
-        `${process.env.EXPO_PUBLIC_POST_MOODDATA}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(moodform),
+          `${process.env.EXPO_PUBLIC_POST_MOODDATA}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(moodform),
+          }
+        );
+
+        const tdmoodres = await tdmoodreq.json();
+        if (tdmoodres.success) {
+          console.log("Send TDmoon success: ", tdmoodres.message);
+        } else {
+          console.log("Send TDmoon Failed: ", tdmoodres.error);
         }
-      );
-      
-      const tdmoodres = await tdmoodreq.json();
-      if (tdmoodres.success) {
-        console.log("Send TDmoon success: ", tdmoodres.message);
-      } else {
-        console.log("Send TDmoon Failed: ", tdmoodres.error);
       }
-    }
     } catch (e) {
       console.log("Failed to send to server: ", e);
     } finally {
