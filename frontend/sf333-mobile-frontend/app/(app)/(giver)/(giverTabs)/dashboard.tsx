@@ -100,6 +100,7 @@ export default function Dashboard() {
 
   useFocusEffect(
     useCallback(() => {
+      console.log(pastMoods[0]);
       percentageCal();
       return () => null;
     }, [])
@@ -114,7 +115,8 @@ export default function Dashboard() {
       }
       count++;
     }
-    setPercent((done / count) * 100);
+    console.log(Math.ceil((done / count) * 100))
+    setPercent(Math.ceil((done / count) * 100));
   };
 
   return (
@@ -171,7 +173,7 @@ export default function Dashboard() {
               <Text style={styles.moodEmoji}>{item.emoji}</Text>
             </View>
             <Text style={[styles.dateText, { flex: 1 }]}>
-              {"Mood created date"}
+              {"Fuck you react"};
             </Text>
           </View>
         ))}

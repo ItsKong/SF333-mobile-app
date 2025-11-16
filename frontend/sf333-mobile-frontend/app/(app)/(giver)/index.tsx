@@ -90,17 +90,13 @@ export default function AppIndex() {
           const userMoodTDreq = await fetch(
             `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${docId}`
           );
-          console.log(
-            "API path: ",
-            `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${docId}`
-          );
           const userTaskData = await userTaskreq.json();
           const userMoodData = await userMoodreq.json();
           const userMoodTDres = await userMoodTDreq.json();
           // console.log("userTask", userTaskData);
           // console.log("userMood", userMoodData);
           if (userMoodTDres.success) {
-            console.log(userMoodTDres.moods);
+            console.log(userMoodTDres.message);
           } else {
             console.log(userMoodTDres.error);
           }

@@ -85,10 +85,7 @@ export default function AppIndex() {
           const userMoodTDreq = await fetch(
             `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${docId}`
           );
-          console.log(
-            "API path: ",
-            `${process.env.EXPO_PUBLIC_GET_MOODTODAY_BYUSER}/${docId}`
-          );
+
           const userTaskData = await userTaskreq.json();
           const userMoodData = await userMoodreq.json();
           const userMoodTDres = await userMoodTDreq.json();
