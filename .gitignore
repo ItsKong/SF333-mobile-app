@@ -1,3 +1,5 @@
 node_modules/
 src/serviceAccountKey.json
 .env
+google-services.json
+GoogleService-Info.plist
